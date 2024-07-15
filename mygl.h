@@ -13,4 +13,4 @@ void MyGlDraw(void);
 
 void PutPixel(Cor cor, Coordenada posicao);
 void DrawLine(Cor cor, Coordenada inicial, Coordenada final);
-void DrawTriangle(void);
+void DrawTriangle(Cor cor, Coordenada a, Coordenada b, Coordenada c);

@@ -5,8 +5,6 @@
 
 using namespace std;
 
-Cor cor;
-Coordenada inicial, final;
 
 int xy_to_array(unsigned int x, unsigned int y)   //converte coordenadas (x,y) do pixel para seu indice no array do Frame Buffer
 {
@@ -23,6 +21,9 @@ void MyGlDraw(void)
     //*************************************************************************
     // Chame aqui as funções do mygl.h
     //*************************************************************************
+    Cor cor;
+    Coordenada inicial, final, media;
+    
     cor = {255, 255, 255, 255};
     inicial.x = 64;
     inicial.y = 86;
@@ -78,6 +79,13 @@ void MyGlDraw(void)
     for(; final.x <= 256; final.x++){
         DrawLine(cor, inicial, final);
     }
+
+    inicial = {135,120};
+    media = {326,199};
+    final = {236,343};
+    cor = {0,0,0,255};
+    
+    DrawTriangle(cor, inicial, media, final);
 }
 
 void PutPixel(Cor cor, Coordenada posicao) {
@@ -129,9 +137,9 @@ void DrawLine(Cor cor, Coordenada i, Coordenada f) {
     }
 }
 
-/*
-void DrawTriangle(void)
+void DrawTriangle(Cor cor, Coordenada a, Coordenada b, Coordenada c)
 {
-
+    DrawLine(cor, a, b);
+    DrawLine(cor, a, c);
+    DrawLine(cor, b, c);
 }
-*/
