@@ -23,27 +23,59 @@ void MyGlDraw(void)
     //*************************************************************************
     // Chame aqui as funções do mygl.h
     //*************************************************************************
-    cor.R = cor.G = cor.B = cor.A = 255;
+    cor = {255, 255, 255, 255};
     inicial.x = 64;
     inicial.y = 86;
     PutPixel(cor, inicial);
 
-    inicial.x = 256;
-    inicial.y = 256;
+    //Teste do DrawLine
+    inicial = {IMAGE_HEIGHT/2, IMAGE_WIDTH/2};
 
-    cor.G = cor.R = 127;
-    final.x = 300;
-    final.y = 0;
-    //DrawLine(cor, inicial, final);
+    final = {256, 0};
+    cor = {255, 0, 0, 255};//Vermelho
+    for(; final.x <= 512; final.x++) {
+        DrawLine(cor, inicial, final);
+    }
     
-    //testa todas as linhas da metade direita da tela
-    for (; final.x < 512; final.x++) {
+    final = {512, 0};
+    cor = {0, 255, 0, 255};//Verde
+    for(; final.y <= 256; final.y++) {
         DrawLine(cor, inicial, final);
     }
-    for (; final.y < 512; final.y++) {
+    
+    final = {512, 256};
+    cor = {0, 0, 255, 255};//Azul
+    for(; final.y <= 512; final.y++){
         DrawLine(cor, inicial, final);
     }
-    for (; final.x > 256; final.x--) {
+
+    final = {256, 512};
+    cor = {128, 0, 128, 255};//Roxo
+    for(; final.x <= 512; final.x++){
+        DrawLine(cor, inicial, final);
+    }
+
+    final = {0,0};
+    cor = {255, 255, 0, 255};//Amarelo
+    for(; final.x <= 256; final.x++){
+        DrawLine(cor, inicial, final);
+    }
+    
+    final = {0,0};
+    cor = {0, 255, 255, 255};//Ciano
+    for(; final.y <= 256; final.y++){
+        DrawLine(cor, inicial, final);
+    }
+    
+    final = {0,256};
+    cor = {255, 0, 255, 255};//Magenta
+    for(; final.y <= 512; final.y++){
+        DrawLine(cor, inicial, final);
+    }
+    
+    final = {0,512};
+    cor = {255, 165, 0, 255};//Laranja
+    for(; final.x <= 256; final.x++){
         DrawLine(cor, inicial, final);
     }
 }
@@ -58,89 +90,45 @@ void PutPixel(Cor cor, Coordenada posicao) {
     FBptr[indice+3] = cor.A; // componente A
 }
 
-void DrawLine(Cor cor, Coordenada i, Coordenada f)
-{
-    int dy = f.y - i.y;
-    int dx = f.x - i.x;
-    Coordenada atual = i; 
-    int e = 0;
-    int m = 0;
-
-    //lógica para determinar o octante a ser rasterizado
-    //considerar os octantes espelhados no eixo y
-    if (MODULO(dx)>MODULO(dy) && dx>0 && dy>=0)     //primeiro octante inferior direito
-        m = 0;
-    else if (MODULO(dx)>MODULO(dy) && dx>0 && dy<0) //primeiro octante superior direito
-        m = 1;
-    else if (MODULO(dx)<MODULO(dy) && dx>=0 && dy>0)//segundo octante inferior direito
-        m = 2;
-    else if (MODULO(dx)<MODULO(dy) && dx>=0 && dy<0)//segundo octante superior direito
-        m = 3;
+void DrawLine(Cor cor, Coordenada i, Coordenada f) {
+    // Calcula as diferenças absolutas entre as coordenadas finais e iniciais
+    int dx = abs(f.x - i.x);
+    int dy = abs(f.y - i.y);
     
-    switch (m)
-    {
-    case 0:
-        while (atual.x <= f.x)
-        {
-            PutPixel(cor, atual);
-            atual.x++;
-            e += 2*dy;
-
-            if(e >= dx){
-                atual.y++;
-                e -= 2*dx;
-            }
-        }
-        break;
+    // Determina a direção do incremento (positivo ou negativo) para x e y
+    int sx = i.x < f.x ? 1 : -1;  // Se i.x < f.x, incrementa x, caso contrário, decrementa
+    int sy = i.y < f.y ? 1 : -1;  // Se i.y < f.y, incrementa y, caso contrário, decrementa
     
-    case 1:
-        while (atual.x <= f.x)
-        {
-            PutPixel(cor, atual);
-            atual.x++;
-            e += -2*dy; 
+    // Inicializa o erro para balancear o incremento de x e y
+    int err = (dx > dy ? dx : -dy) / 2;
+    int e2;
 
-            if(e >= dx){
-                atual.y--;
-                e -= 2*dx;
-            }
-        } 
-        break;
+    // Define a coordenada atual como a inicial
+    Coordenada atual = i;
 
-    case 2:
-        while (atual.y <= f.y)  //para um dy>dx, inverte a lógica de parada para o eixo y
-        {
-            PutPixel(cor, atual);
-            atual.y++;
-            e += 2*dx;
-
-            if(e >= dy){
-                atual.x++;
-                e -= 2*dy;
-            }
+    // Loop principal que desenha a linha
+    while (true) {
+        // Desenha o pixel na coordenada atual com a cor especificada
+        PutPixel(cor, atual);
+        
+        // Verifica se a coordenada atual atingiu a coordenada final
+        if (atual.x == f.x && atual.y == f.y) break;
+        
+        // Armazena o valor atual do erro em e2
+        e2 = err;
+        
+        // Ajusta as coordenadas e o erro com base nos valores de dx e dy
+        if (e2 > -dx) {  // Se e2 for maior que -dx, ajusta x
+            err -= dy;
+            atual.x += sx;
         }
-        break;
-
-    case 3: //ERRO?: chega na coordenada (512,0) -> esperado (511,0)
-        while (atual.y >= f.y)
-        {
-            PutPixel(cor, atual);
-            printf("(%d,%d)\n",atual.x,atual.y);    //percorre as coordenadas mas não liga os pixels
-            atual.y--;
-            e += 2*dy;
-
-            if(e <= dy){
-                atual.x++;
-                e -= -2*dx;
-            }
+        if (e2 < dy) {  // Se e2 for menor que dy, ajusta y
+            err += dx;
+            atual.y += sy;
         }
-        break;
-
-    default:
-        cout << "Nenhum caso\n";
-        break;
     }
 }
+
 /*
 void DrawTriangle(void)
 {
