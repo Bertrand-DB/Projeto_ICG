@@ -28,7 +28,7 @@ void MyGlDraw(void)
     inicial.x = 64;
     inicial.y = 86;
     PutPixel(cor, inicial);
-
+    
     //Teste do DrawLine
     inicial = {IMAGE_HEIGHT/2, IMAGE_WIDTH/2};
 
@@ -83,9 +83,10 @@ void MyGlDraw(void)
     inicial = {135,120};
     media = {326,199};
     final = {236,343};
-    cor = {0,0,0,255};
+    cor = {0,0,0, 255};
     
     DrawTriangle(cor, inicial, media, final);
+    
 }
 
 void PutPixel(Cor cor, Coordenada posicao) {
