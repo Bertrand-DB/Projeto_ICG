@@ -1,10 +1,14 @@
 #include <GL/glut.h>
 #include <vector>
+#include <cmath>
+#include <iostream>
+
+using namespace std;
 
 GLint WINDOW_WIDTH = 500, WINDOW_HEIGHT = 500;
 GLfloat corAtual[] = {0.0f, 0.0f, 0.0f}; // Cor atual para pontos e linhas
 
-enum ModoDesenho { PONTO, LINHA, RETANGULO };
+enum ModoDesenho { PONTO, LINHA, RETANGULO, CIRCULO };
 ModoDesenho modoAtual = PONTO; // Modo de desenho inicial
 
 struct Ponto {
@@ -15,6 +19,8 @@ struct Ponto {
 // Lista de pontos, linhas e retângulos desenhados
 std::vector<Ponto> pontos;
 std::vector<std::pair<Ponto, Ponto>> linhas;
+std::vector<std::pair<Ponto, Ponto>> retangulos;
+std::vector<std::pair<Ponto, GLfloat>> circulos;
 std::vector<Ponto> pontosLinha; // Para armazenar os pontos clicados para desenhar linhas e retângulos
 
 bool mousePressed = false; // Estado do botão do mouse
@@ -49,25 +55,27 @@ void draw() {
     }
 
     // Desenha todos os retângulos
-    for (size_t i = 0; i < pontosLinha.size(); i += 2) {
-        if (i + 1 < pontosLinha.size()) {
-            Ponto p1 = pontosLinha[i];
-            Ponto p2 = pontosLinha[i + 1];
-            
-            // Calcular os vértices do retângulo
-            GLfloat x1 = p1.x;
-            GLfloat y1 = p1.y;
-            GLfloat x2 = p2.x;
-            GLfloat y2 = p2.y;
+    for (const auto& retangulo : retangulos) {
+        glColor3f(retangulo.first.r, retangulo.first.g, retangulo.first.b);
+        glBegin(GL_LINE_LOOP);
+        glVertex2f(retangulo.first.x, retangulo.first.y);
+        glVertex2f(retangulo.first.x, retangulo.second.y);
+        glVertex2f(retangulo.second.x, retangulo.second.y);
+        glVertex2f(retangulo.second.x, retangulo.first.y);
+        glEnd();
+    }
 
-            glColor3f(p1.r, p1.g, p1.b);
-            glBegin(GL_LINE_LOOP);
-            glVertex2f(x1, y1);
-            glVertex2f(x1, y2);
-            glVertex2f(x2, y2);
-            glVertex2f(x2, y1);
-            glEnd();
+    // Desenha todos os círculos
+    for (const auto& circulo : circulos) {
+        glColor3f(circulo.first.r, circulo.first.g, circulo.first.b);
+        glBegin(GL_LINE_LOOP);
+        for (int i = 0; i < 100; ++i) {
+            GLfloat angle = 2.0 * M_PI * i / 100;
+            GLfloat dx = circulo.second * cosf(angle);
+            GLfloat dy = circulo.second * sinf(angle);
+            glVertex2f(circulo.first.x + dx, circulo.first.y + dy);
         }
+        glEnd();
     }
 
     // Desenha todos os pontos com suas cores associadas
@@ -96,12 +104,19 @@ void desenharLinha() {
 
 void desenharRetangulo() {
     if (pontosLinha.size() == 2) {
-        Ponto p1 = pontosLinha[0];
-        Ponto p2 = pontosLinha[1];
-        
-        // Adiciona os dois pontos da diagonal como retângulo
-        linhas.push_back({p1, p2});
+        retangulos.push_back({pontosLinha[0], pontosLinha[1]});
         pontosLinha.clear(); // Limpa a lista de pontos para o próximo retângulo
+        glutPostRedisplay();
+    }
+}
+
+void desenharCirculo() {
+    if (pontosLinha.size() == 2) {
+        GLfloat dx = pontosLinha[1].x - pontosLinha[0].x;
+        GLfloat dy = pontosLinha[1].y - pontosLinha[0].y;
+        GLfloat raio = sqrt(dx * dx + dy * dy);
+        circulos.push_back({pontosLinha[0], raio});
+        pontosLinha.clear(); // Limpa a lista de pontos para o próximo círculo
         glutPostRedisplay();
     }
 }
@@ -109,6 +124,8 @@ void desenharRetangulo() {
 void limparTela() {
     pontos.clear();
     linhas.clear();
+    retangulos.clear();
+    circulos.clear();
     pontosLinha.clear();
     glutPostRedisplay();
 }
@@ -132,10 +149,19 @@ void mouse(int button, int state, int x, int y) {
                 if (pontosLinha.size() == 1) {
                     // Adiciona o ponto e espera o segundo ponto para desenhar o retângulo
                     pontosLinha.push_back(Ponto{(GLfloat)x, (GLfloat)y, corAtual[0], corAtual[1], corAtual[2]});
-                } else {
-                    // Adiciona o segundo ponto e desenha o retângulo
-                    pontosLinha.push_back(Ponto{(GLfloat)x, (GLfloat)y, corAtual[0], corAtual[1], corAtual[2]});
                     desenharRetangulo();
+                } else {
+                    // Adiciona o primeiro ponto do retângulo
+                    pontosLinha.push_back(Ponto{(GLfloat)x, (GLfloat)y, corAtual[0], corAtual[1], corAtual[2]});
+                }
+            } else if (modoAtual == CIRCULO) {
+                if (pontosLinha.size() == 1) {
+                    // Adiciona o ponto e espera o segundo ponto para desenhar o círculo
+                    pontosLinha.push_back(Ponto{(GLfloat)x, (GLfloat)y, corAtual[0], corAtual[1], corAtual[2]});
+                    desenharCirculo();
+                } else {
+                    // Adiciona o primeiro ponto do círculo
+                    pontosLinha.push_back(Ponto{(GLfloat)x, (GLfloat)y, corAtual[0], corAtual[1], corAtual[2]});
                 }
             }
         } else if (state == GLUT_UP) {
@@ -147,7 +173,8 @@ void mouse(int button, int state, int x, int y) {
         glutAddMenuEntry("Ponto", PONTO);
         glutAddMenuEntry("Linha", LINHA);
         glutAddMenuEntry("Retangulo", RETANGULO);
-        glutAddMenuEntry("Limpar", 3); // Adiciona a opção de limpar ao menu
+        glutAddMenuEntry("Circulo", CIRCULO);
+        glutAddMenuEntry("Limpar", 5); // Adiciona a opção de limpar ao menu
         glutAttachMenu(GLUT_RIGHT_BUTTON);
     }
 }
@@ -159,7 +186,7 @@ void motion(int x, int y) {
 }
 
 void menu(int option) {
-    if (option == 3) {
+    if (option == 5) {
         limparTela();
     } else {
         modoAtual = static_cast<ModoDesenho>(option);
@@ -168,6 +195,9 @@ void menu(int option) {
 }
 
 void teclado(unsigned char key, int x, int y) {
+
+    if(isupper(key)) key = tolower(key);//Transformar qq caracter em minusculo!
+
     switch (key) {
         case 'r':
             if (corAtual[0] == 1.0f && corAtual[1] == 0.0f && corAtual[2] == 0.0f) {
@@ -215,7 +245,8 @@ int main(int argc, char *argv[]) {
     glutAddMenuEntry("Ponto", PONTO);
     glutAddMenuEntry("Linha", LINHA);
     glutAddMenuEntry("Retangulo", RETANGULO);
-    glutAddMenuEntry("Limpar", 3); // Adiciona a opção de limpar ao menu
+    glutAddMenuEntry("Circulo", CIRCULO);
+    glutAddMenuEntry("Limpar", 5); // Adiciona a opção de limpar ao menu
 
     glutAttachMenu(GLUT_RIGHT_BUTTON);
 
