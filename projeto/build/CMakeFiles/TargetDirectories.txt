@@ -1,3 +1,0 @@
-/home/pc-home/Documentos/GitHub/Projeto_ICG/projeto/build/CMakeFiles/main.dir
-/home/pc-home/Documentos/GitHub/Projeto_ICG/projeto/build/CMakeFiles/edit_cache.dir
-/home/pc-home/Documentos/GitHub/Projeto_ICG/projeto/build/CMakeFiles/rebuild_cache.dir
