@@ -8,9 +8,8 @@ float earthAngle = 23.26f;     // Terra
 float marsAngle = 25.19f;      // Marte
 float jupiterAngle = 3.13f;    // Júpiter
 float saturnAngle = 26.73f;    // Saturno
-float uranusAngle = 97.77f;     // Urano
-float neptuneAngle = 28.32f;    // Netuno
-
+float uranusAngle = 97.77f;    // Urano
+float neptuneAngle = 28.32f;   // Netuno
 
 float cameraX = 0.0f, cameraY = 15.0f, cameraZ = 14.0f; // Posição inicial da câmera
 float cameraAngleH = 0.0f;  // Ângulo de rotação horizontal da câmera
@@ -20,6 +19,9 @@ float rotationSpeed = 0.05f;  // Velocidade de rotação da câmera
 
 // Vetor direção da câmera
 float cameraLookX = 0.0f, cameraLookY = 0.0f, cameraLookZ = -1.0f;
+
+// Variável para pausar o movimento
+bool isPaused = false;
 
 void init() {
     glEnable(GL_DEPTH_TEST);
@@ -76,14 +78,16 @@ void display() {
 }
 
 void update(int value) {
-    mercuryAngle += 4.0f;
-    venusAngle += 3.0f;
-    earthAngle += 2.0f;
-    marsAngle += 1.5f;
-    jupiterAngle += 1.0f;
-    saturnAngle += 0.8f;
-    uranusAngle += 0.5f;
-    neptuneAngle += 0.3f;
+    if (!isPaused) { // Atualiza os ângulos somente se não estiver pausado
+        mercuryAngle += 4.0f;
+        venusAngle += 3.0f;
+        earthAngle += 2.0f;
+        marsAngle += 1.5f;
+        jupiterAngle += 1.0f;
+        saturnAngle += 0.8f;
+        uranusAngle += 0.5f;
+        neptuneAngle += 0.3f;
+    }
 
     glutPostRedisplay();
     glutTimerFunc(16, update, 0);
@@ -127,6 +131,9 @@ void handleKeys(unsigned char key, int x, int y) {
             cameraAngleV -= rotationSpeed;
             if (cameraAngleV < -1.5f) cameraAngleV = -1.5f; // Limitar para não ultrapassar
             updateCameraLookDirection();
+            break;
+        case ' ':  // Pausar/retomar o movimento com a tecla espaço
+            isPaused = !isPaused;
             break;
     }
     glutPostRedisplay();
