@@ -2,6 +2,7 @@
 #include <cmath>
 #include <iostream>
 
+// Ângulos de inclinação do eixo de rotação
 #define INCLINACAO_EIXO_MERCURIO    0.01f
 #define INCLINACAO_EIXO_VENUS       177.3f
 #define INCLINACAO_EIXO_TERRA       23.26f
@@ -10,6 +11,8 @@
 #define INCLINACAO_EIXO_SATURNO     26.73f
 #define INCLINACAO_EIXO_URANO       97.77f
 #define INCLINACAO_EIXO_NETUNO      28.32f
+
+#define DISTANCIA_PADRAO 3.0f
 
 // Ângulos de translação (posição em órbita) dos planetas em graus
 float mercuryAngle = 0.00f;
@@ -21,11 +24,11 @@ float saturnAngle = 0.00f;
 float uranusAngle = 0.00f;
 float neptuneAngle = 0.00f;
 
-float velOrbitalTerra = 1.0f;
+float velOrbitalPadrao = 1.0f;
 
 float cameraX = 0.0f, cameraY = 15.0f, cameraZ = 14.0f; // Posição inicial da câmera
-float cameraAngleH = 0.0f;  // Ângulo de rotação horizontal da câmera
-float cameraAngleV = 0.0f;  // Ângulo de rotação vertical da câmera
+float cameraAngleH = 0.3f;  // Ângulo de rotação horizontal da câmera
+float cameraAngleV = -0.8f;  // Ângulo de rotação vertical da câmera
 float movementSpeed = 0.2f;  // Velocidade de movimento da câmera
 float rotationSpeed = 0.02f;  // Velocidade de rotação da câmera
 
@@ -94,14 +97,14 @@ void display() {
     glutSolidSphere(1.0f, 50, 50);
 
     // Desenhar os planetas
-    drawPlanet(2.0f, 0.1f, mercuryAngle, 0.5f, 0.5f, 0.5f, INCLINACAO_EIXO_MERCURIO);
-    drawPlanet(2.5f, 0.2f, venusAngle, 0.9f, 0.6f, 0.3f, INCLINACAO_EIXO_VENUS);
-    drawPlanet(3.0f, 0.3f, earthAngle, 0.2f, 0.5f, 1.0f, INCLINACAO_EIXO_TERRA);
-    drawPlanet(4.0f, 0.2f, marsAngle, 1.0f, 0.4f, 0.3f, INCLINACAO_EIXO_MARTE);
-    drawPlanet(6.0f, 0.7f, jupiterAngle, 1.0f, 0.8f, 0.4f, INCLINACAO_EIXO_JUPITER);
-    drawPlanet(8.0f, 0.6f, saturnAngle, 0.9f, 0.7f, 0.4f, INCLINACAO_EIXO_SATURNO);
-    drawPlanet(10.0f, 0.4f, uranusAngle, 0.4f, 0.7f, 1.0f, INCLINACAO_EIXO_URANO);
-    drawPlanet(12.0f, 0.4f, neptuneAngle, 0.2f, 0.4f, 1.0f, INCLINACAO_EIXO_NETUNO);
+    drawPlanet(0.39*DISTANCIA_PADRAO, 0.1f, mercuryAngle, 0.5f, 0.5f, 0.5f, INCLINACAO_EIXO_MERCURIO);
+    drawPlanet(0.72*DISTANCIA_PADRAO, 0.2f, venusAngle, 0.9f, 0.6f, 0.3f, INCLINACAO_EIXO_VENUS);
+    drawPlanet(DISTANCIA_PADRAO, 0.3f, earthAngle, 0.2f, 0.5f, 1.0f, INCLINACAO_EIXO_TERRA);
+    drawPlanet(1.52*DISTANCIA_PADRAO, 0.2f, marsAngle, 1.0f, 0.4f, 0.3f, INCLINACAO_EIXO_MARTE);
+    drawPlanet(5.2*DISTANCIA_PADRAO, 0.7f, jupiterAngle, 1.0f, 0.8f, 0.4f, INCLINACAO_EIXO_JUPITER);
+    drawPlanet(9.58*DISTANCIA_PADRAO, 0.6f, saturnAngle, 0.9f, 0.7f, 0.4f, INCLINACAO_EIXO_SATURNO);
+    drawPlanet(19.18*DISTANCIA_PADRAO, 0.4f, uranusAngle, 0.4f, 0.7f, 1.0f, INCLINACAO_EIXO_URANO);
+    drawPlanet(30.07*DISTANCIA_PADRAO, 0.4f, neptuneAngle, 0.2f, 0.4f, 1.0f, INCLINACAO_EIXO_NETUNO);
 
     glutSwapBuffers();
 }
@@ -110,14 +113,14 @@ void update(int value) {
     // Atualiza os ângulos dos planetas em órbita em relacao ao sol somente se não estiver pausado
     // Cada planeta se move a uma velocidade proporcional em relação a terra
     if (!isPaused) {
-        mercuryAngle += 4.1505681818*velOrbitalTerra;
-        venusAngle += 1.6233333333*velOrbitalTerra;
-        earthAngle += velOrbitalTerra;
-        marsAngle += 0.5316593886*velOrbitalTerra;
-        jupiterAngle += 0.0843144044*velOrbitalTerra;
-        saturnAngle += 0.0339483223*velOrbitalTerra;
-        uranusAngle += 0.0119125273*velOrbitalTerra;
-        neptuneAngle += 0.0060669734*velOrbitalTerra;
+        mercuryAngle += 4.1505681818*velOrbitalPadrao;
+        venusAngle += 1.6233333333*velOrbitalPadrao;
+        earthAngle += velOrbitalPadrao;
+        marsAngle += 0.5316593886*velOrbitalPadrao;
+        jupiterAngle += 0.0843144044*velOrbitalPadrao;
+        saturnAngle += 0.0339483223*velOrbitalPadrao;
+        uranusAngle += 0.0119125273*velOrbitalPadrao;
+        neptuneAngle += 0.0060669734*velOrbitalPadrao;
     }
 
     // Atualiza a direção de visualização da câmera
@@ -188,13 +191,13 @@ void handleKeys(unsigned char key, int x, int y) {
             isPaused = !isPaused;
             break;
         case '1':   // Define a velocidade das órbitas
-            velOrbitalTerra = 1.0f;
+            velOrbitalPadrao = 1.0f;
             break;
         case '2':   // Define a velocidade das órbitas
-            velOrbitalTerra = 3.0f;
+            velOrbitalPadrao = 3.0f;
             break;
         case '3':   // Define a velocidade das órbitas
-            velOrbitalTerra = 5.0f;
+            velOrbitalPadrao = 5.0f;
             break;
     }
 
