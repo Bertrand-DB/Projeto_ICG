@@ -1,9 +1,8 @@
-#define STB_IMAGE_IMPLEMENTATION
-#include <GL/glew.h>
 #include <GL/glut.h>
+#include <SOIL/SOIL.h>  // Biblioteca para carregar texturas
 #include <cmath>
+#include <cstdio>
 #include <iostream>
-#include "stb_image.h"
 
 // Ângulos de inclinação do eixo de rotação
 #define INCLINACAO_EIXO_MERCURIO    0.01f
@@ -16,6 +15,18 @@
 #define INCLINACAO_EIXO_NETUNO      28.32f
 
 #define DISTANCIA_PADRAO 3.0f
+#define RAIO_PADRAO 0.1f
+
+// Variável para armazenar as textura do sol e dos planetas
+GLuint sunTexture;
+GLuint mercuryTexture;
+GLuint venusTexture;
+GLuint earthTexture;
+GLuint marsTexture;
+GLuint jupiterTexture;
+GLuint saturnTexture;
+GLuint uranusTexture;
+GLuint neptuneTexture;
 
 // Ângulos de translação (posição em órbita) dos planetas em graus
 float mercuryAngle = 0.00f;
@@ -28,8 +39,6 @@ float uranusAngle = 0.00f;
 float neptuneAngle = 0.00f;
 
 float velOrbitalPadrao = 1.0f;
-
-GLuint textures[8];
 
 // Posição inicial da câmera
 float cameraX = 0.0f, cameraY = 15.0f, cameraZ = 14.0f;
@@ -56,60 +65,145 @@ bool lookDown = false;
 bool lookLeft = false;
 bool lookRight = false;
 
+void loadTextures() {
+    // Carregar a textura do Sol
+    sunTexture = SOIL_load_OGL_texture("texturas/sun.jpg", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_INVERT_Y);
+    if (!sunTexture) {
+        printf("Falha ao carregar a textura do Sol!\n");
+        exit(1);
+    }
+    
+    // Carregar as texturas dos planetas
+    // Mercúrio
+    mercuryTexture = SOIL_load_OGL_texture("texturas/mercury.jpg", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_INVERT_Y);
+    if (!mercuryTexture) {
+        printf("Falha ao carregar a textura de Mercúrio!\n");
+        exit(1);
+    }
+
+    // Vênus
+    venusTexture = SOIL_load_OGL_texture("texturas/venus.jpg", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_INVERT_Y);
+    if (!venusTexture) {
+        printf("Falha ao carregar a textura de Vênus!\n");
+        exit(1);
+    }
+    
+    // Terra
+    earthTexture = SOIL_load_OGL_texture("texturas/earth.jpg", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_INVERT_Y);
+    if (!earthTexture) {
+        printf("Falha ao carregar a textura da Terra!\n");
+        exit(1);
+    }
+    
+    // Marte
+    marsTexture = SOIL_load_OGL_texture("texturas/mars.jpg", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_INVERT_Y);
+    if (!marsTexture) {
+        printf("Falha ao carregar a textura de Marte!\n");
+        exit(1);
+    }
+    
+    // Júpiter
+    jupiterTexture = SOIL_load_OGL_texture("texturas/jupiter.jpg", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_INVERT_Y);
+    if (!jupiterTexture) {
+        printf("Falha ao carregar a textura de Júpiter!\n");
+        exit(1);
+    }
+
+    // Saturno
+    saturnTexture = SOIL_load_OGL_texture("texturas/saturn.jpg", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_INVERT_Y);
+    if (!saturnTexture) {
+        printf("Falha ao carregar a textura de Saturno!\n");
+        exit(1);
+    }
+
+    // Urano
+    uranusTexture = SOIL_load_OGL_texture("texturas/uranus.jpg", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_INVERT_Y);
+    if (!uranusTexture) {
+        printf("Falha ao carregar a textura de Urano!\n");
+        exit(1);
+    }
+
+    // Neturno
+    neptuneTexture = SOIL_load_OGL_texture("texturas/neptune.jpg", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_INVERT_Y);
+    if (!neptuneTexture) {
+        printf("Falha ao carregar a textura de Netuno!\n");
+        exit(1);
+    }
+
+    // Configurações da textura do Sol
+    glBindTexture(GL_TEXTURE_2D, sunTexture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    // Configurações das texturas dos planetas
+    // Mercúrio
+    glBindTexture(GL_TEXTURE_2D, mercuryTexture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    // Vênus
+    glBindTexture(GL_TEXTURE_2D, venusTexture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    
+    // Terra
+    glBindTexture(GL_TEXTURE_2D, earthTexture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    
+    // Marte
+    glBindTexture(GL_TEXTURE_2D, marsTexture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    // Júpiter
+    glBindTexture(GL_TEXTURE_2D, jupiterTexture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    
+    // Saturno
+    glBindTexture(GL_TEXTURE_2D, saturnTexture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    
+    // Urano
+    glBindTexture(GL_TEXTURE_2D, uranusTexture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    // Netuno
+    glBindTexture(GL_TEXTURE_2D, neptuneTexture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+}
+
 void init() {
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_LIGHTING);
     glEnable(GL_LIGHT0);
     glEnable(GL_COLOR_MATERIAL);
+    glEnable(GL_TEXTURE_2D);  // Habilitar texturas
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
-    // Configuração da luz
-    GLfloat lightPos[] = {0.0f, 0.0f, 0.0f, 1.0f};
-    glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
-    GLfloat lightColor[] = {1.0f, 1.0f, 1.0f, 1.0f}; // Cor da luz
-    glLightfv(GL_LIGHT0, GL_DIFFUSE, lightColor); // Luz difusa
-}
-
-GLuint loadTexture(const char* filename) {
-    GLuint texture;
-    int width, height, channels;
-    
-    // Carregar a imagem usando stb_image
-    unsigned char* data = stbi_load(filename, &width, &height, &channels, 0);
-    if (data == nullptr) {
-        std::cout << "Erro ao carregar a textura: " << filename << std::endl;
-        return 0;
-    }
-
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
-
-    // Configurações da textura
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    
-    // Carregar a textura
-    GLenum format = (channels == 3) ? GL_RGB : GL_RGBA;
-    glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-    
-    // Gerar mipmaps
-    glGenerateMipmap(GL_TEXTURE_2D);
-
-    stbi_image_free(data); // Liberar a memória da imagem
-    return texture;
-}
-
-void loadTextures() {
-    textures[0] = loadTexture("texturas/mercury.jpg");
-    textures[1] = loadTexture("texturas/venus.jpg");
-    textures[2] = loadTexture("texturas/earth.jpg");
-    textures[3] = loadTexture("texturas/mars.jpg");
-    textures[4] = loadTexture("texturas/jupiter.jpg");
-    textures[5] = loadTexture("texturas/saturn.jpg");
-    textures[6] = loadTexture("texturas/uranus.jpg");
-    textures[7] = loadTexture("texturas/neptune.jpg");
+    loadTextures();  // Carregar as texturas
 }
 
 // Função para atualizar a direção da câmera baseado em seus ângulos
@@ -128,14 +222,20 @@ void drawPlanet(float distance, float size, float angle, GLuint texture, float a
     // Inclinação do eixo de rotação (em torno do eixo X)
     glRotatef(axialTilt, 1.0f, 0.0f, 0.0f);
     
-    glBindTexture(GL_TEXTURE_2D, texture);
+    if (texture) {
+        glEnable(GL_TEXTURE_2D);
+        glBindTexture(GL_TEXTURE_2D, texture);  // Associar a textura
+        glColor3f(1.0f, 1.0f, 1.0f);  // Branco para permitir a visualização da textura
+    } else {
+        glDisable(GL_TEXTURE_2D);  // Desabilitar texturas se não houver
+    }
     
     // Desenhar a esfera com textura
-    glColor3f(1.0f, 1.0f, 1.0f); // Para garantir que a cor não interfira
     GLUquadric* quadric = gluNewQuadric();
-    gluQuadricTexture(quadric, GL_TRUE); // Ativar textura para a quadrica
-    gluSphere(quadric, size, 50, 50); // Criar a esfera
-    gluDeleteQuadric(quadric); // Liberar memória
+    gluQuadricTexture(quadric, GL_TRUE);
+    gluSphere(quadric, size, 50, 50);
+    gluDeleteQuadric(quadric);
+
     glPopMatrix();
 }
 
@@ -148,19 +248,22 @@ void display() {
               cameraX + cameraLookX, cameraY + cameraLookY, cameraZ + cameraLookZ, 
               0.0, 1.0, 0.0);
 
-    // Desenhar o Sol
-    glColor3f(1.0f, 1.0f, 0.0f);
-    glutSolidSphere(1.0f, 50, 50);
+    GLfloat lightPos[] = {0.0f, 0.0f, 0.0f, 1.0f};
+    glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
+
+    // Desenhar o Sol com textura
+    drawPlanet(0.0f, 109*RAIO_PADRAO, 0.0f, sunTexture); 
 
     // Desenhar os planetas
-    drawPlanet(2.0f, 0.1f, mercuryAngle, textures[0], INCLINACAO_EIXO_MERCURIO);
-    drawPlanet(2.5f, 0.2f, venusAngle, textures[1], INCLINACAO_EIXO_VENUS);
-    drawPlanet(3.0f, 0.3f, earthAngle, textures[2], INCLINACAO_EIXO_TERRA);
-    drawPlanet(4.0f, 0.2f, marsAngle, textures[3], INCLINACAO_EIXO_MARTE);
-    drawPlanet(6.0f, 0.7f, jupiterAngle, textures[4], INCLINACAO_EIXO_JUPITER);
-    drawPlanet(8.0f, 0.6f, saturnAngle, textures[5], INCLINACAO_EIXO_SATURNO);
-    drawPlanet(10.0f, 0.4f, uranusAngle, textures[6], INCLINACAO_EIXO_URANO);
-    drawPlanet(12.0f, 0.4f, neptuneAngle, textures[7], INCLINACAO_EIXO_NETUNO);
+    // Distancia dos planetas em escala + compensação do raio do sol
+    drawPlanet(0.39*DISTANCIA_PADRAO+109*RAIO_PADRAO, 0.38*RAIO_PADRAO, mercuryAngle, mercuryTexture, INCLINACAO_EIXO_MERCURIO);
+    drawPlanet(0.72*DISTANCIA_PADRAO+109*RAIO_PADRAO, 0.95*RAIO_PADRAO, venusAngle, venusTexture, INCLINACAO_EIXO_VENUS);
+    drawPlanet(DISTANCIA_PADRAO+109*RAIO_PADRAO, RAIO_PADRAO, earthAngle, earthTexture, INCLINACAO_EIXO_TERRA);
+    drawPlanet(1.52*DISTANCIA_PADRAO+109*RAIO_PADRAO, 0.53*RAIO_PADRAO, marsAngle, marsTexture, INCLINACAO_EIXO_MARTE);
+    drawPlanet(5.2*DISTANCIA_PADRAO+109*RAIO_PADRAO, 11.21*RAIO_PADRAO, jupiterAngle, jupiterTexture, INCLINACAO_EIXO_JUPITER);
+    drawPlanet(9.58*DISTANCIA_PADRAO+109*RAIO_PADRAO, 9.45*RAIO_PADRAO, saturnAngle, saturnTexture, INCLINACAO_EIXO_SATURNO);
+    drawPlanet(19.18*DISTANCIA_PADRAO+109*RAIO_PADRAO, 4.01*RAIO_PADRAO, uranusAngle, uranusTexture, INCLINACAO_EIXO_URANO);
+    drawPlanet(30.07*DISTANCIA_PADRAO+109*RAIO_PADRAO, 3.88*RAIO_PADRAO, neptuneAngle, neptuneTexture, INCLINACAO_EIXO_NETUNO);
 
     glutSwapBuffers();
 }
@@ -273,15 +376,8 @@ void reshape(int width, int height) {
 int main(int argc, char** argv) {
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
-    glutInitWindowSize(800, 600);
+    glutInitWindowSize(1660, 960);
     glutCreateWindow("Sistema Solar em OpenGL");
-
-    // Inicialize o GLEW
-    GLenum err = glewInit();
-    if (err != GLEW_OK) {
-        std::cerr << "Erro ao inicializar o GLEW: " << glewGetErrorString(err) << std::endl;
-        return -1;
-    }
 
     init();
     loadTextures();
