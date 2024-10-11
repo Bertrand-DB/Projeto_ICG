@@ -1,3 +1,4 @@
+//Comando de compilação: g++ SistemaSolar.cpp -o sis -lGL -lGLU -lSOIL  -lGLEW -lglut -lm
 #include <GL/glut.h>
 #include <SOIL/SOIL.h>  // Biblioteca para carregar texturas
 #include <cmath>
@@ -31,16 +32,28 @@ GLuint neptuneTexture;
 GLuint backgroundTexture;
 
 // Ângulos de translação (posição em órbita) dos planetas em graus
-float mercuryAngle = 0.00f;
-float venusAngle = 0.00f;
-float earthAngle = 0.00f;
-float marsAngle = 0.00f;
-float jupiterAngle = 0.00f;
-float saturnAngle = 0.00f;
-float uranusAngle = 0.00f;
-float neptuneAngle = 0.00f;
+float mercuryTransAngle = 0.00f;
+float venusTransAngle = 0.00f;
+float earthTransAngle = 0.00f;
+float marsTransAngle = 0.00f;
+float jupiterTransAngle = 0.00f;
+float saturnTransAngle = 0.00f;
+float uranusTransAngle = 0.00f;
+float neptuneTransAngle = 0.00f;
+
+// Ângulos de rotação (no próprio eixo) dos planetas em graus
+float sunRotAngle = 0.0f;
+float mercuryRotAngle = 0.00f;
+float venusRotAngle = 0.00f;
+float earthRotAngle = 0.00f;
+float marsRotAngle = 0.00f;
+float jupiterRotAngle = 0.00f;
+float saturnRotAngle = 0.00f;
+float uranusRotAngle = 0.00f;
+float neptuneRotAngle = 0.00f;
 
 float velOrbitalPadrao = 0.5f;
+float velRotacaoPadrao = 1.0f;
 
 // Posição espacial da câmera
 float cameraX = 2.97471;
@@ -58,7 +71,8 @@ float rotationSpeed = 0.02f;  // Velocidade de rotação da câmera
 float cameraLookX = 0.0f, cameraLookY = 0.0f, cameraLookZ = -1.0f;
 
 // Variável para pausar o movimento de translação
-bool isPaused = false;
+bool translacao = true;
+bool rotacao = true;
 bool desenhaOrbita = true;
 
 // Variáveis para controlar as teclas de movimento
@@ -266,16 +280,19 @@ void drawBackground() {
 }
 
 
-void drawPlanet(float distance, float size, float angle, GLuint texture, float axialTilt = 0.0f) {
+void drawPlanet(float distance, float size, float translationAngle, GLuint texture, float axialTilt, float rotationAngle) {
     glPushMatrix();
 
     if(desenhaOrbita) drawOrbit(distance);
     
-    glRotatef(angle, 0.0f, 1.0f, 0.0f); // Rotação do planeta em torno do sol (translação)
+    glRotatef(translationAngle, 0.0f, 1.0f, 0.0f); // Rotação do planeta em torno do sol (translação)
     glTranslatef(distance, 0.0f, 0.0f); // Posição do planeta em relação ao Sol
     
     // Inclinação do eixo de rotação (em torno do eixo X)
     glRotatef(axialTilt-90, 1.0f, 0.0f, 0.0f);
+
+    // Rotação em torno do próprio eixo
+    glRotatef(rotationAngle, 0.0f, 0.0f, 1.0f);
     
     if (texture) {
         glEnable(GL_TEXTURE_2D);
@@ -308,37 +325,58 @@ void display() {
     GLfloat lightPos[] = {0.0f, 0.0f, 0.0f, 1.0f};
     glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
 
-    // Desenhar o Sol com textura
-    drawPlanet(0.0f, 109*RAIO_PADRAO, 0.0f, sunTexture); 
+    // Configurar a emissão de luz do Sol para brilhar amarelo
+    GLfloat emission[] = { 1.0f, 1.0f, 0.0f, 1.0f };
+    glMaterialfv(GL_FRONT, GL_EMISSION, emission);
+
+    drawPlanet(0.0f, 109*RAIO_PADRAO, 0.0f, sunTexture, 0.0f, sunRotAngle); //Desenha o sol
+
+    // Desativar emissão
+    GLfloat noEmission[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+    glMaterialfv(GL_FRONT, GL_EMISSION, noEmission);
 
     // Desenhar os planetas
     // Distancia dos planetas em escala + compensação do raio do sol
-    drawPlanet(0.39*DISTANCIA_PADRAO+COMPENSACAO, 0.38*RAIO_PADRAO, mercuryAngle, mercuryTexture, INCLINACAO_EIXO_MERCURIO);
-    drawPlanet(0.72*DISTANCIA_PADRAO+COMPENSACAO, 0.95*RAIO_PADRAO, venusAngle, venusTexture, INCLINACAO_EIXO_VENUS);
-    drawPlanet(DISTANCIA_PADRAO+COMPENSACAO, RAIO_PADRAO, earthAngle, earthTexture, INCLINACAO_EIXO_TERRA);
-    drawPlanet(1.52*DISTANCIA_PADRAO+COMPENSACAO, 0.53*RAIO_PADRAO, marsAngle, marsTexture, INCLINACAO_EIXO_MARTE);
-    drawPlanet(5.2*DISTANCIA_PADRAO+COMPENSACAO, 11.21*RAIO_PADRAO, jupiterAngle, jupiterTexture, INCLINACAO_EIXO_JUPITER);
-    drawPlanet(9.58*DISTANCIA_PADRAO+COMPENSACAO, 9.45*RAIO_PADRAO, saturnAngle, saturnTexture, INCLINACAO_EIXO_SATURNO);
-    drawPlanet(19.18*DISTANCIA_PADRAO+COMPENSACAO, 4.01*RAIO_PADRAO, uranusAngle, uranusTexture, INCLINACAO_EIXO_URANO);
-    drawPlanet(30.07*DISTANCIA_PADRAO+COMPENSACAO, 3.88*RAIO_PADRAO, neptuneAngle, neptuneTexture, INCLINACAO_EIXO_NETUNO);
+    drawPlanet(0.39*DISTANCIA_PADRAO+COMPENSACAO, 0.38*RAIO_PADRAO, mercuryTransAngle, mercuryTexture, INCLINACAO_EIXO_MERCURIO, mercuryRotAngle);
+    drawPlanet(0.72*DISTANCIA_PADRAO+COMPENSACAO, 0.95*RAIO_PADRAO, venusTransAngle, venusTexture, INCLINACAO_EIXO_VENUS, venusRotAngle);
+    drawPlanet(DISTANCIA_PADRAO+COMPENSACAO, RAIO_PADRAO, earthTransAngle, earthTexture, INCLINACAO_EIXO_TERRA, earthRotAngle);
+    drawPlanet(1.52*DISTANCIA_PADRAO+COMPENSACAO, 0.53*RAIO_PADRAO, marsTransAngle, marsTexture, INCLINACAO_EIXO_MARTE, marsRotAngle);
+    drawPlanet(5.2*DISTANCIA_PADRAO+COMPENSACAO, 11.21*RAIO_PADRAO, jupiterTransAngle, jupiterTexture, INCLINACAO_EIXO_JUPITER, jupiterRotAngle);
+    drawPlanet(9.58*DISTANCIA_PADRAO+COMPENSACAO, 9.45*RAIO_PADRAO, saturnTransAngle, saturnTexture, INCLINACAO_EIXO_SATURNO, saturnRotAngle);
+    drawPlanet(19.18*DISTANCIA_PADRAO+COMPENSACAO, 4.01*RAIO_PADRAO, uranusTransAngle, uranusTexture, INCLINACAO_EIXO_URANO, uranusRotAngle);
+    drawPlanet(30.07*DISTANCIA_PADRAO+COMPENSACAO, 3.88*RAIO_PADRAO, neptuneTransAngle, neptuneTexture, INCLINACAO_EIXO_NETUNO, neptuneRotAngle);
 
     glutSwapBuffers();
 }
 
 void update(int value) {
-    // Atualiza os ângulos dos planetas em órbita em relacao ao sol somente se não estiver pausado
     // Cada planeta se move a uma velocidade proporcional em relação a terra
-    if (!isPaused) {
-        mercuryAngle += 4.1505681818*velOrbitalPadrao;
-        venusAngle += 1.6233333333*velOrbitalPadrao;
-        earthAngle += velOrbitalPadrao;
-        marsAngle += 0.5316593886*velOrbitalPadrao;
-        jupiterAngle += 0.0843144044*velOrbitalPadrao;
-        saturnAngle += 0.0339483223*velOrbitalPadrao;
-        uranusAngle += 0.0119125273*velOrbitalPadrao;
-        neptuneAngle += 0.0060669734*velOrbitalPadrao;
+    // Atualiza os ângulos dos planetas em órbita em relacao ao sol somente se não estiver pausado
+    if (translacao) {
+        mercuryTransAngle += 4.1505681818*velOrbitalPadrao;
+        venusTransAngle += 1.6233333333*velOrbitalPadrao;
+        earthTransAngle += velOrbitalPadrao;
+        marsTransAngle += 0.5316593886*velOrbitalPadrao;
+        jupiterTransAngle += 0.0843144044*velOrbitalPadrao;
+        saturnTransAngle += 0.0339483223*velOrbitalPadrao;
+        uranusTransAngle += 0.0119125273*velOrbitalPadrao;
+        neptuneTransAngle += 0.0060669734*velOrbitalPadrao;
     }
 
+    // Atualiza os ângulos de rotação dos planetas em torno do proprio eixo somente se não estiver pausado
+    if (rotacao)
+    {
+        sunRotAngle += 0.03703703704*velRotacaoPadrao;
+        mercuryRotAngle += 0.01705146131*velRotacaoPadrao;
+        venusRotAngle += 0.004115056994*velRotacaoPadrao;
+        earthRotAngle += velRotacaoPadrao;
+        marsRotAngle += 0.9747072494*velRotacaoPadrao;
+        jupiterRotAngle += 2.4182037*velRotacaoPadrao;
+        saturnRotAngle += 2.345340536*velRotacaoPadrao;
+        uranusRotAngle += 1.392111369*velRotacaoPadrao;
+        neptuneRotAngle += 1.489757914*velRotacaoPadrao;
+    }
+    
     // Atualiza a direção de visualização da câmera
     if (lookUp && cameraAngleV<1.5f) cameraAngleV += rotationSpeed;
     if (lookDown && cameraAngleV>-1.5f) cameraAngleV -= rotationSpeed;
@@ -414,7 +452,7 @@ void handleKeys(unsigned char key, int x, int y){
 
     switch (key) {
         case 'p':  // Pausar/retomar o movimento com a tecla P
-            isPaused = !isPaused;
+            translacao = !translacao;
             break;
         case '1':   // Define a velocidade das órbitas
             velOrbitalPadrao = 0.5f;
