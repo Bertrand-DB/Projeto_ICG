@@ -1,4 +1,4 @@
-//Comando de compilação: g++ SistemaSolar.cpp -o sis -lGL -lGLU -lSOIL  -lGLEW -lglut -lm
+//Comando de compilação: g++ SistemaSolar.cpp -o sis -lGL -lGLU -lSOIL -lglut -lm
 #include <GL/glut.h>
 #include <SOIL/SOIL.h>  // Biblioteca para carregar texturas
 #include <cmath>
@@ -18,6 +18,7 @@
 #define DISTANCIA_PADRAO    3.0f
 #define COMPENSACAO         20.0f
 #define RAIO_PADRAO         0.1f
+#define SENSIBILIDADE       0.001f
 
 // Variável para armazenar as textura do sol e dos planetas
 GLuint sunTexture;
@@ -61,6 +62,10 @@ float velRotacaoPadrao = 1.0f;
 float cameraX = 2.97471;
 float cameraY = 10.2;
 float cameraZ = 38.8908;
+
+// Posição do mouse
+int lastMouseX = 0;
+int lastMouseY = 0;
 
 // Posição angular da câmera
 float cameraAngleH = 0.62;
@@ -351,23 +356,19 @@ void drawPlanet(float distance, float size, float translationAngle, GLuint textu
     glPushMatrix();
 
     if(desenhaOrbita) drawOrbit(distance);
-    
-    glRotatef(translationAngle, 0.0f, 1.0f, 0.0f); // Rotação do planeta em torno do sol (translação)
-    glTranslatef(distance, 0.0f, 0.0f); // Posição do planeta em relação ao Sol
-    glRotatef(-translationAngle, 0.0f, 1.0f, 0.0f); // Compensa a rotação da translação do planeta
-    
-    // Inclinação do eixo de rotação (em torno do eixo X)
-    glRotatef(axialTilt-90, 1.0f, 0.0f, 0.0f);
 
-    // Rotação em torno do próprio eixo
-    glRotatef(rotationAngle, 0.0f, 0.0f, 1.0f);
+    glRotatef(translationAngle, 0.0f, 1.0f, 0.0f);  // Rotação do planeta em torno do sol (translação)
+    glTranslatef(distance, 0.0f, 0.0f);             // Posição do planeta em relação ao Sol
+    glRotatef(-translationAngle, 0.0f, 1.0f, 0.0f); // Compensa a rotação da translação do planeta
+    glRotatef(axialTilt-90, 1.0f, 0.0f, 0.0f);      // Inclinação do eixo de rotação (em torno do eixo X)
+    glRotatef(rotationAngle, 0.0f, 0.0f, 1.0f);     // Rotação em torno do próprio eixo
     
     if (texture) {
         glEnable(GL_TEXTURE_2D);
         glBindTexture(GL_TEXTURE_2D, texture);  // Associar a textura
-        glColor3f(1.0f, 1.0f, 1.0f);  // Branco para permitir a visualização da textura
+        glColor3f(1.0f, 1.0f, 1.0f);            // Branco para permitir a visualização da textura
     } else {
-        glDisable(GL_TEXTURE_2D);  // Desabilitar texturas se não houver
+        glDisable(GL_TEXTURE_2D);               // Desabilitar texturas se não houver
     }
     
     // Desenhar a esfera com textura
@@ -479,6 +480,34 @@ void update(int value) {
     glutTimerFunc(16, update, 0);
 }
 
+// Função para capturar o movimento do mouse
+void mouseMotion(int x, int y) {
+    int deltaX = x - lastMouseX;
+    int deltaY = y - lastMouseY;
+
+    // Atualizar ângulos da câmera com base no movimento do mouse
+    cameraAngleH -= deltaX * SENSIBILIDADE;
+    cameraAngleV += deltaY * SENSIBILIDADE;
+
+    // Limitar a inclinação da câmera
+    if (cameraAngleV > 1.5f) cameraAngleV = 1.5f; // Limite superior
+    if (cameraAngleV < -1.5f) cameraAngleV = -1.5f; // Limite inferior
+
+    lastMouseX = x;
+    lastMouseY = y;
+}
+
+// Função para capturar o botão do mouse (opcional)
+void mouseButton(int button, int state, int x, int y) {
+    if (button == GLUT_LEFT_BUTTON) {
+        if (state == GLUT_DOWN) {
+            // Armazenar a posição do mouse quando o botão é pressionado
+            lastMouseX = x;
+            lastMouseY = y;
+        }
+    }
+}
+
 // Função para capturar teclas de controle da câmera
 // Precisa detectar a tecla pressionada e liberada
 void movementKeys(unsigned char key, int x, int y) {
@@ -501,18 +530,6 @@ void movementKeys(unsigned char key, int x, int y) {
         case 'c':   // Mover a câmera para baixo (eixo y)
             moveDown = !moveDown;
             break;
-        case 'h':  // Rotacionar para a esquerda (horizontalmente)
-            lookLeft = !lookLeft;
-            break;
-        case 'k':  // Rotacionar para a direita (horizontalmente)
-            lookRight = !lookRight;
-            break;
-        case 'u':  // Rotacionar para cima (verticalmente)
-            lookUp = !lookUp;
-            break;
-        case 'j':  // Rotacionar para baixo (verticalmente)
-            lookDown = !lookDown;
-            break;
     }
     glutPostRedisplay();
 }
@@ -522,8 +539,11 @@ void handleKeys(unsigned char key, int x, int y){
     movementKeys(key,x,y);
 
     switch (key) {
-        case 'p':  // Pausar/retomar o movimento com a tecla P
+        case 'p':  // Pausar/retomar o movimento de translação
             translacao = !translacao;
+            break;
+        case 'P':
+            rotacao = !rotacao;
             break;
         case '1':   // Define a velocidade das órbitas
             velOrbitalPadrao = 0.5f;
@@ -571,6 +591,8 @@ int main(int argc, char** argv) {
     glutReshapeFunc(reshape);
     glutKeyboardFunc(handleKeys);        // Captura teclas pressionadas
     glutKeyboardUpFunc(movementKeys);     // Captura quando as teclas são liberadas
+    glutMouseFunc(mouseButton);
+    glutMotionFunc(mouseMotion);
     glutTimerFunc(25, update, 0);
 
     glutMainLoop();
