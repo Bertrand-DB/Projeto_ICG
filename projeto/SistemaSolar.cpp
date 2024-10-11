@@ -27,9 +27,11 @@ GLuint earthTexture;
 GLuint marsTexture;
 GLuint jupiterTexture;
 GLuint saturnTexture;
+GLuint saturnRingTexture;
 GLuint uranusTexture;
 GLuint neptuneTexture;
 GLuint backgroundTexture;
+
 
 // Ângulos de translação (posição em órbita) dos planetas em graus
 float mercuryTransAngle = 0.00f;
@@ -57,12 +59,12 @@ float velRotacaoPadrao = 1.0f;
 
 // Posição espacial da câmera
 float cameraX = 2.97471;
-float cameraY = 46.4001;
+float cameraY = 10.2;
 float cameraZ = 38.8908;
 
 // Posição angular da câmera
-float cameraAngleH = 0.58;
-float cameraAngleV = -0.8;
+float cameraAngleH = 0.62;
+float cameraAngleV = -0.3;
 
 float movementSpeed = 0.2f;  // Velocidade de movimento da câmera
 float rotationSpeed = 0.02f;  // Velocidade de rotação da câmera
@@ -138,6 +140,13 @@ void loadTextures() {
         exit(1);
     }
 
+    // Anel de Saturno
+    saturnRingTexture = SOIL_load_OGL_texture("texturas/saturnRing.png", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_INVERT_Y);
+    if (!saturnRingTexture) {
+        printf("Falha ao carregar a textura do anel de Saturno!\n");
+        exit(1);
+    }
+
     // Urano
     uranusTexture = SOIL_load_OGL_texture("texturas/uranus.jpg", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_INVERT_Y);
     if (!uranusTexture) {
@@ -208,6 +217,13 @@ void loadTextures() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    // Anel de Saturno
+    glBindTexture(GL_TEXTURE_2D, saturnRingTexture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     
     // Urano
     glBindTexture(GL_TEXTURE_2D, uranusTexture);
@@ -279,6 +295,57 @@ void drawBackground() {
     glPopMatrix();
 }
 
+void drawRing(float distance, float size, float translationAngle, GLuint texture, float axialTilt, float rotationAngle){
+    glPushMatrix();
+    
+    // Aplicar a textura ao anel
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, saturnRingTexture);
+
+    // Ativar blending para melhorar a aparência do anel (se a textura tiver transparência)
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    // Posicionar o anel no centro de Saturno
+    glRotatef(translationAngle, 0.0f, 1.0f, 0.0f); // Rotação do planeta em torno do sol (translação)
+    glTranslatef(distance, 0.0f, 0.0f); // Posição do planeta em relação ao Sol
+    glRotatef(-translationAngle, 0.0f, 1.0f, 0.0f);
+    
+    // Inclinar o anel de acordo com a inclinação de Saturno
+    glRotatef(axialTilt, 1.0f, 0.0f, 0.0f); // Inclinação de 23.26 graus no eixo X
+
+    // Rotação em torno do próprio eixo
+    glRotatef(rotationAngle, 0.0f, 1.0f, 0.0f);
+    
+    int segments = 300;
+    float raioInt = 1.1161478728*size;
+    float raioExt = 2.327404261*size;
+
+    glBegin(GL_QUAD_STRIP);
+    
+    for (int i = 0; i <= segments; i++) {
+        float angle = 2.0f * M_PI * i / segments;
+        float x = cos(angle);
+        float z = sin(angle);
+        float sCoord = (float)i / (float)segments;
+
+        glNormal3f(0.0f, 1.0f, 0.0f);  // Normal ajustada
+
+        // Outer ring
+        glTexCoord2f(sCoord, 1.0f); // Texture mapping
+        glVertex3f(raioExt * x, 0.0f, raioExt * z);
+
+        // Inner ring
+        glTexCoord2f(sCoord, 0.0f); // Texture mapping
+        glVertex3f(raioInt * x, 0.0f, raioInt * z);
+    }
+    glEnd();
+
+    // Desativar blend e textura
+    glDisable(GL_BLEND);
+    glDisable(GL_TEXTURE_2D);
+    glPopMatrix();
+}
 
 void drawPlanet(float distance, float size, float translationAngle, GLuint texture, float axialTilt, float rotationAngle) {
     glPushMatrix();
@@ -287,6 +354,7 @@ void drawPlanet(float distance, float size, float translationAngle, GLuint textu
     
     glRotatef(translationAngle, 0.0f, 1.0f, 0.0f); // Rotação do planeta em torno do sol (translação)
     glTranslatef(distance, 0.0f, 0.0f); // Posição do planeta em relação ao Sol
+    glRotatef(-translationAngle, 0.0f, 1.0f, 0.0f); // Compensa a rotação da translação do planeta
     
     // Inclinação do eixo de rotação (em torno do eixo X)
     glRotatef(axialTilt-90, 1.0f, 0.0f, 0.0f);
@@ -345,6 +413,9 @@ void display() {
     drawPlanet(9.58*DISTANCIA_PADRAO+COMPENSACAO, 9.45*RAIO_PADRAO, saturnTransAngle, saturnTexture, INCLINACAO_EIXO_SATURNO, saturnRotAngle);
     drawPlanet(19.18*DISTANCIA_PADRAO+COMPENSACAO, 4.01*RAIO_PADRAO, uranusTransAngle, uranusTexture, INCLINACAO_EIXO_URANO, uranusRotAngle);
     drawPlanet(30.07*DISTANCIA_PADRAO+COMPENSACAO, 3.88*RAIO_PADRAO, neptuneTransAngle, neptuneTexture, INCLINACAO_EIXO_NETUNO, neptuneRotAngle);
+
+    //desenha anel de saturno
+    drawRing(9.58*DISTANCIA_PADRAO+COMPENSACAO, 9.45*RAIO_PADRAO, saturnTransAngle, saturnRingTexture, INCLINACAO_EIXO_SATURNO, 0.0f);
 
     glutSwapBuffers();
 }
@@ -465,10 +536,10 @@ void handleKeys(unsigned char key, int x, int y){
             break;
         case 'r':   // Reposiciona a câmera na posição inicial
             cameraX = 2.97471;
-            cameraY = 46.4001;
+            cameraY = 10.2;
             cameraZ = 38.8908;
-            cameraAngleH = 0.58;
-            cameraAngleV = -0.8;
+            cameraAngleH = 0.62;
+            cameraAngleV = -0.3;
             break;
         case 'l':
             desenhaOrbita = !desenhaOrbita;
