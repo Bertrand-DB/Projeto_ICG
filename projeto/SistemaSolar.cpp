@@ -14,8 +14,9 @@
 #define INCLINACAO_EIXO_URANO       97.77f
 #define INCLINACAO_EIXO_NETUNO      28.32f
 
-#define DISTANCIA_PADRAO 3.0f
-#define RAIO_PADRAO 0.1f
+#define DISTANCIA_PADRAO    3.0f
+#define COMPENSACAO         20.0f
+#define RAIO_PADRAO         0.1f
 
 // Variável para armazenar as textura do sol e dos planetas
 GLuint sunTexture;
@@ -27,6 +28,7 @@ GLuint jupiterTexture;
 GLuint saturnTexture;
 GLuint uranusTexture;
 GLuint neptuneTexture;
+GLuint backgroundTexture;
 
 // Ângulos de translação (posição em órbita) dos planetas em graus
 float mercuryAngle = 0.00f;
@@ -38,20 +40,26 @@ float saturnAngle = 0.00f;
 float uranusAngle = 0.00f;
 float neptuneAngle = 0.00f;
 
-float velOrbitalPadrao = 1.0f;
+float velOrbitalPadrao = 0.5f;
 
-// Posição inicial da câmera
-float cameraX = 0.0f, cameraY = 15.0f, cameraZ = 14.0f;
-float cameraAngleH = 0.3f;  // Ângulo de rotação horizontal da câmera
-float cameraAngleV = -0.8f;  // Ângulo de rotação vertical da câmera
+// Posição espacial da câmera
+float cameraX = 2.97471;
+float cameraY = 46.4001;
+float cameraZ = 38.8908;
+
+// Posição angular da câmera
+float cameraAngleH = 0.58;
+float cameraAngleV = -0.8;
+
 float movementSpeed = 0.2f;  // Velocidade de movimento da câmera
 float rotationSpeed = 0.02f;  // Velocidade de rotação da câmera
 
 // Vetor direção da câmera
 float cameraLookX = 0.0f, cameraLookY = 0.0f, cameraLookZ = -1.0f;
 
-// Variável para pausar o movimento
+// Variável para pausar o movimento de translação
 bool isPaused = false;
+bool desenhaOrbita = true;
 
 // Variáveis para controlar as teclas de movimento
 bool moveUp = false;
@@ -127,6 +135,13 @@ void loadTextures() {
     neptuneTexture = SOIL_load_OGL_texture("texturas/neptune.jpg", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_INVERT_Y);
     if (!neptuneTexture) {
         printf("Falha ao carregar a textura de Netuno!\n");
+        exit(1);
+    }
+
+    // Fundo
+    backgroundTexture = SOIL_load_OGL_texture("texturas/background.jpg", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_INVERT_Y);
+    if (!backgroundTexture) {
+        printf("Falha ao carregar a textura de fundo!\n");
         exit(1);
     }
 
@@ -213,14 +228,54 @@ void updateCameraLookDirection() {
     cameraLookZ = -cos(cameraAngleH) * cos(cameraAngleV);
 }
 
+void drawOrbit(float distance) {
+    glDisable(GL_LIGHTING);  // Desabilitar iluminação para desenhar a órbita
+    glDisable(GL_TEXTURE_2D);  // Desabilitar texturas para a órbita
+    glColor3f(0.2f, 0.2f, 0.2f);  // Define a cor branca para a órbita
+
+    // Desenhar a órbita como um círculo
+    glBegin(GL_LINE_LOOP);
+    int numSegments = 500;  // Aumente o número para uma órbita mais suave
+    for (int i = 0; i < numSegments; ++i) {
+        float angle = 2.0f * M_PI * i / numSegments;
+        float x = cos(angle) * distance;
+        float z = sin(angle) * distance;
+        glVertex3f(x, 0.0f, z);  // Mantém no plano XZ (horizontal)
+    }
+    glEnd();
+    glEnable(GL_LIGHTING);
+}
+
+void drawBackground() {
+    glPushMatrix();
+    
+    glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
+    glDisable(GL_LIGHTING);  // Desabilitar iluminação para o fundo
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, backgroundTexture);  // Associar a textura de fundo
+    glColor3f(1.0f, 1.0f, 1.0f);  // Branco para permitir a visualização da textura
+
+    // Desenhar uma esfera grande ao redor da cena para o background
+    GLUquadric* quadric = gluNewQuadric();
+    gluQuadricTexture(quadric, GL_TRUE);
+    gluSphere(quadric, 200.0f, 50, 50);  // Tamanho grande da esfera para cobrir o universo
+    gluDeleteQuadric(quadric);
+
+    glEnable(GL_LIGHTING);  // Reabilitar a iluminação
+    glPopMatrix();
+}
+
+
 void drawPlanet(float distance, float size, float angle, GLuint texture, float axialTilt = 0.0f) {
     glPushMatrix();
+
+    if(desenhaOrbita) drawOrbit(distance);
     
     glRotatef(angle, 0.0f, 1.0f, 0.0f); // Rotação do planeta em torno do sol (translação)
     glTranslatef(distance, 0.0f, 0.0f); // Posição do planeta em relação ao Sol
     
     // Inclinação do eixo de rotação (em torno do eixo X)
-    glRotatef(axialTilt, 1.0f, 0.0f, 0.0f);
+    glRotatef(axialTilt-90, 1.0f, 0.0f, 0.0f);
     
     if (texture) {
         glEnable(GL_TEXTURE_2D);
@@ -248,6 +303,8 @@ void display() {
               cameraX + cameraLookX, cameraY + cameraLookY, cameraZ + cameraLookZ, 
               0.0, 1.0, 0.0);
 
+    drawBackground();
+
     GLfloat lightPos[] = {0.0f, 0.0f, 0.0f, 1.0f};
     glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
 
@@ -256,14 +313,14 @@ void display() {
 
     // Desenhar os planetas
     // Distancia dos planetas em escala + compensação do raio do sol
-    drawPlanet(0.39*DISTANCIA_PADRAO+109*RAIO_PADRAO, 0.38*RAIO_PADRAO, mercuryAngle, mercuryTexture, INCLINACAO_EIXO_MERCURIO);
-    drawPlanet(0.72*DISTANCIA_PADRAO+109*RAIO_PADRAO, 0.95*RAIO_PADRAO, venusAngle, venusTexture, INCLINACAO_EIXO_VENUS);
-    drawPlanet(DISTANCIA_PADRAO+109*RAIO_PADRAO, RAIO_PADRAO, earthAngle, earthTexture, INCLINACAO_EIXO_TERRA);
-    drawPlanet(1.52*DISTANCIA_PADRAO+109*RAIO_PADRAO, 0.53*RAIO_PADRAO, marsAngle, marsTexture, INCLINACAO_EIXO_MARTE);
-    drawPlanet(5.2*DISTANCIA_PADRAO+109*RAIO_PADRAO, 11.21*RAIO_PADRAO, jupiterAngle, jupiterTexture, INCLINACAO_EIXO_JUPITER);
-    drawPlanet(9.58*DISTANCIA_PADRAO+109*RAIO_PADRAO, 9.45*RAIO_PADRAO, saturnAngle, saturnTexture, INCLINACAO_EIXO_SATURNO);
-    drawPlanet(19.18*DISTANCIA_PADRAO+109*RAIO_PADRAO, 4.01*RAIO_PADRAO, uranusAngle, uranusTexture, INCLINACAO_EIXO_URANO);
-    drawPlanet(30.07*DISTANCIA_PADRAO+109*RAIO_PADRAO, 3.88*RAIO_PADRAO, neptuneAngle, neptuneTexture, INCLINACAO_EIXO_NETUNO);
+    drawPlanet(0.39*DISTANCIA_PADRAO+COMPENSACAO, 0.38*RAIO_PADRAO, mercuryAngle, mercuryTexture, INCLINACAO_EIXO_MERCURIO);
+    drawPlanet(0.72*DISTANCIA_PADRAO+COMPENSACAO, 0.95*RAIO_PADRAO, venusAngle, venusTexture, INCLINACAO_EIXO_VENUS);
+    drawPlanet(DISTANCIA_PADRAO+COMPENSACAO, RAIO_PADRAO, earthAngle, earthTexture, INCLINACAO_EIXO_TERRA);
+    drawPlanet(1.52*DISTANCIA_PADRAO+COMPENSACAO, 0.53*RAIO_PADRAO, marsAngle, marsTexture, INCLINACAO_EIXO_MARTE);
+    drawPlanet(5.2*DISTANCIA_PADRAO+COMPENSACAO, 11.21*RAIO_PADRAO, jupiterAngle, jupiterTexture, INCLINACAO_EIXO_JUPITER);
+    drawPlanet(9.58*DISTANCIA_PADRAO+COMPENSACAO, 9.45*RAIO_PADRAO, saturnAngle, saturnTexture, INCLINACAO_EIXO_SATURNO);
+    drawPlanet(19.18*DISTANCIA_PADRAO+COMPENSACAO, 4.01*RAIO_PADRAO, uranusAngle, uranusTexture, INCLINACAO_EIXO_URANO);
+    drawPlanet(30.07*DISTANCIA_PADRAO+COMPENSACAO, 3.88*RAIO_PADRAO, neptuneAngle, neptuneTexture, INCLINACAO_EIXO_NETUNO);
 
     glutSwapBuffers();
 }
@@ -313,8 +370,9 @@ void update(int value) {
     glutTimerFunc(16, update, 0);
 }
 
-// Função para capturar teclas normais e controlar a câmera
-void handleKeys(unsigned char key, int x, int y) {
+// Função para capturar teclas de controle da câmera
+// Precisa detectar a tecla pressionada e liberada
+void movementKeys(unsigned char key, int x, int y) {
     switch (key) {
         case 'a':  // Mover a câmera para a esquerda
             moveLeft = !moveLeft;
@@ -346,17 +404,36 @@ void handleKeys(unsigned char key, int x, int y) {
         case 'j':  // Rotacionar para baixo (verticalmente)
             lookDown = !lookDown;
             break;
+    }
+    glutPostRedisplay();
+}
+
+// Função para capturar teclas de controle da câmera e configuração
+void handleKeys(unsigned char key, int x, int y){
+    movementKeys(key,x,y);
+
+    switch (key) {
         case 'p':  // Pausar/retomar o movimento com a tecla P
             isPaused = !isPaused;
             break;
         case '1':   // Define a velocidade das órbitas
-            velOrbitalPadrao = 1.0f;
+            velOrbitalPadrao = 0.5f;
             break;
         case '2':   // Define a velocidade das órbitas
-            velOrbitalPadrao = 3.0f;
+            velOrbitalPadrao = 2.0f;
             break;
         case '3':   // Define a velocidade das órbitas
-            velOrbitalPadrao = 5.0f;
+            velOrbitalPadrao = 4.0f;
+            break;
+        case 'r':   // Reposiciona a câmera na posição inicial
+            cameraX = 2.97471;
+            cameraY = 46.4001;
+            cameraZ = 38.8908;
+            cameraAngleH = 0.58;
+            cameraAngleV = -0.8;
+            break;
+        case 'l':
+            desenhaOrbita = !desenhaOrbita;
             break;
         case 27:   // Tecla ESC para sair
             exit(0);
@@ -369,7 +446,7 @@ void reshape(int width, int height) {
     glViewport(0, 0, width, height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(45.0, (float)width / (float)height, 0.1, 100.0);
+    gluPerspective(45.0, (float)width / (float)height, 0.1, 400.0);
     glMatrixMode(GL_MODELVIEW);
 }
 
@@ -384,7 +461,7 @@ int main(int argc, char** argv) {
     glutDisplayFunc(display);
     glutReshapeFunc(reshape);
     glutKeyboardFunc(handleKeys);        // Captura teclas pressionadas
-    glutKeyboardUpFunc(handleKeys);     // Captura quando as teclas são liberadas
+    glutKeyboardUpFunc(movementKeys);     // Captura quando as teclas são liberadas
     glutTimerFunc(25, update, 0);
 
     glutMainLoop();
