@@ -88,6 +88,7 @@ bool lookDown = false;
 bool lookLeft = false;
 bool lookRight = false;
 
+//_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_
 // Dados do menu e do pop-up
 const char* menuItems[] = { "Sair do programa", "Controles"};
 const char* popItems[] = {
@@ -116,7 +117,7 @@ const char* popItems[] = {
 };
 
 
-int selectedItem = 0;
+int selectedItem = -1;
 bool showControlersInfo = false;
 
 // Função para renderizar texto bitmap
@@ -159,7 +160,7 @@ void renderPopUp() {
     int popupX = (windowWidth - popupWidth) / 2;
     int popupY = (windowHeight - popupHeight) / 2;
 
-    std::cout << "Valores da Tela(" << windowWidth << " - " << windowHeight <<") e popupX: " << popupX << " popupY: " << popupY << std::endl; 
+    //std::cout << "Valores da Tela(" << windowWidth << " - " << windowHeight <<") e popupX: " << popupX << " popupY: " << popupY << std::endl; 
 
     glColor3f(1.0, 1.0, 1.0); // Cor do texto branco
     for (int i = 0; i < 22; i++) {
@@ -257,6 +258,7 @@ void renderMenu() {
 
 
 
+//_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_
 void loadTextures() {
     // Carregar a textura do Sol
     sunTexture = SOIL_load_OGL_texture("texturas/sun.jpg", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_INVERT_Y);
@@ -323,7 +325,7 @@ void loadTextures() {
     }
 
     // Fundo
-    backgroundTexture = SOIL_load_OGL_texture("texturas/teste.jpg", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_INVERT_Y);
+    backgroundTexture = SOIL_load_OGL_texture("texturas/background.jpg", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_INVERT_Y);
     if (!backgroundTexture) {
         printf("Falha ao carregar a textura de fundo!\n");
         exit(1);
@@ -393,7 +395,7 @@ void loadTextures() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 }
-
+//_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_
 void init() {
     //glEnable(GL_BLEND); // Habilita o blending (mistura de cores)
     //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // Define a função de blend
@@ -406,7 +408,7 @@ void init() {
 
     loadTextures();  // Carregar as texturas
 }
-
+//_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_
 // Função para atualizar a direção da câmera baseado em seus ângulos
 void updateCameraLookDirection() {
     cameraLookX = sin(cameraAngleH) * cos(cameraAngleV);
@@ -483,6 +485,7 @@ void drawPlanet(float distance, float size, float translationAngle, GLuint textu
     glPopMatrix();
 }
 
+//_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_
 void display() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -527,6 +530,7 @@ void display() {
 
     glutSwapBuffers();
 }
+//_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_
 
 void update(int value) {
     // Cada planeta se move a uma velocidade proporcional em relação a terra
@@ -587,7 +591,7 @@ void update(int value) {
     glutTimerFunc(16, update, 0);
 }
 
-
+//_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_
 //Função para pegar as teclas das 'setinhas'
 void specialKeys(int key, int x, int y) {
     switch (key) {
@@ -603,6 +607,7 @@ void specialKeys(int key, int x, int y) {
 
     glutPostRedisplay();
 }
+//_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_
 
 // Função para capturar teclas de controle da câmera
 // Precisa detectar a tecla pressionada e liberada
@@ -642,6 +647,7 @@ void movementKeys(unsigned char key, int x, int y) {
     glutPostRedisplay();
 }
 
+//_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_
 // Função para capturar teclas de controle da câmera e configuração
 void handleKeys(unsigned char key, int x, int y){
     movementKeys(key,x,y);
@@ -673,7 +679,6 @@ void handleKeys(unsigned char key, int x, int y){
             showControlersInfo = false;
             break;
         case 13: // Enter
-            std::cout << "Apertou o ENTER" << std::endl;
             if (selectedItem == 0) {
                 exit(0);
             } else if (selectedItem == 1) {
@@ -683,6 +688,7 @@ void handleKeys(unsigned char key, int x, int y){
     }
     glutPostRedisplay();
 }
+//_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_
 
 void reshape(int width, int height) {
     glViewport(0, 0, width, height);
