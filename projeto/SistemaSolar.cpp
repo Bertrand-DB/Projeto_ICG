@@ -4,6 +4,7 @@
 #include <cmath>
 #include <cstdio>
 #include <iostream>
+#include <string.h>
 
 // Ângulos de inclinação do eixo de rotação
 #define INCLINACAO_EIXO_MERCURIO    0.01f
@@ -62,7 +63,7 @@ float cameraZ = 38.8908;
 
 // Posição angular da câmera
 float cameraAngleH = 0.58;
-float cameraAngleV = -0.8;
+float cameraAngleV = -0.8;                                                                                                                  
 
 float movementSpeed = 0.2f;  // Velocidade de movimento da câmera
 float rotationSpeed = 0.02f;  // Velocidade de rotação da câmera
@@ -86,6 +87,172 @@ bool lookUp = false;
 bool lookDown = false;
 bool lookLeft = false;
 bool lookRight = false;
+
+// Dados do menu e do pop-up
+const char* menuItems[] = { "Sair do programa", "Controles"};
+const char* popItems[] = {
+    "'ESC' - Tecla ESC para voltar",
+    " ",
+    "'l' - Desenhar as orbitas dos planetas",
+    "'r' - Reposiciona a camera na posição inicial",
+    " ",
+    "'3' - Define a velocidade das orbitas",
+    "'2' - Define a velocidade das orbitas",
+    "'1' - Define a velocidade das orbitas",
+    " ",
+    "'p' - Pausar/retomar o movimento com a tecla P",
+    " ",
+    "'j' - Rotacionar para baixo (verticalmente)",
+    "'u' - Rotacionar para cima (verticalmente)",
+    "'k' - Rotacionar para a direita (horizontalmente)",
+    "'h' - Rotacionar para a esquerda (horizontalmente)",
+    " ",
+    "'c' - Mover a camera para baixo (eixo y)",
+    "'Espaco' - Mover a camera para cima (eixo y)",
+    "'s' - Mover a camera para tras",
+    "'w' - Mover a camera para frente",
+    "'d' - Mover a camera para a direita",
+    "'a' - Mover a camera para a esquerda"
+};
+
+
+int selectedItem = 0;
+bool showControlersInfo = false;
+
+// Função para renderizar texto bitmap
+void renderBitmapString(float x, float y, void *font, const char *string) {
+    const char *c;
+    glRasterPos2f(x, y);
+    for (c = string; *c != '\0'; c++) {
+        glutBitmapCharacter(font, *c);
+    }
+}
+
+// Função para renderizar o pop-up com controles
+void renderPopUp() {
+    // Salva a configuração da projeção atual (perspectiva)
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    
+    // Define uma projeção ortográfica para desenhar o menu
+    gluOrtho2D(0, 1660, 0, 960); // Configuração do sistema de coordenadas 2D
+
+    // Alterna para a matriz de modelo
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+
+    // Desabilitar texturas e iluminação temporariamente para renderizar o texto e os retângulos
+    glDisable(GL_TEXTURE_2D);
+    glDisable(GL_LIGHTING);
+
+    // Habilitar blending para transparência
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    int windowWidth = glutGet(GLUT_WINDOW_WIDTH);
+    int windowHeight = glutGet(GLUT_WINDOW_HEIGHT);
+
+    int popupWidth = windowWidth / 2;
+    int popupHeight = windowHeight / 2;
+    int popupX = (windowWidth - popupWidth) / 2;
+    int popupY = (windowHeight - popupHeight) / 2;
+
+    glColor3f(1.0, 1.0, 1.0); // Cor do texto branco
+    for (int i = 0; i < 22; i++) {
+        renderBitmapString(popupX + 10, popupY + 50 + (i * 15), GLUT_BITMAP_9_BY_15, popItems[i]);
+    }
+
+    renderBitmapString(popupX + 200, popupY + 305, GLUT_BITMAP_TIMES_ROMAN_24, "Controles do Programa");
+
+    glColor4f(0.0, 0.0, 0.0, 0.8); // Fundo preto com transparência
+    glRectf(popupX, popupY, popupX + popupWidth, popupY + popupHeight); // Desenha o pop-up
+
+    // Desabilitar o blending após o uso
+    glDisable(GL_BLEND);
+
+    // Habilitar novamente texturas e iluminação
+    glEnable(GL_TEXTURE_2D);
+    glEnable(GL_LIGHTING);
+
+    // Restaura a matriz de modelo original
+    glPopMatrix();
+    
+    // Restaura a matriz de projeção original (perspectiva)
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+
+    // Volta para a matriz de modelo para evitar interferências
+    glMatrixMode(GL_MODELVIEW);
+
+    glFlush(); // Garante que os comandos sejam executados
+}
+    
+// Função de renderização do menu
+void renderMenu() {
+    // Salva a configuração da projeção atual (perspectiva)
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    
+    // Define uma projeção ortográfica para desenhar o menu
+    gluOrtho2D(0, 1660, 0, 960); // Configuração do sistema de coordenadas 2D
+
+    // Alterna para a matriz de modelo
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+
+    // Desabilitar texturas e iluminação temporariamente para renderizar o texto e os retângulos
+    glDisable(GL_TEXTURE_2D);
+    glDisable(GL_LIGHTING);
+
+    // Habilitar blending para transparência
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    // Renderiza os itens do menu
+    for (int i = 0; i < 2; i++) {
+        if (i == selectedItem) {
+            glColor3f(0.0, 0.0, 0.0); // Cor do texto do item selecionado
+        } else {
+            glColor3f(1.0, 1.0, 1.0); // Cor do texto dos itens não selecionados
+        }
+
+        // Renderiza o texto do item do menu
+        renderBitmapString(10, 30 + (i * 50), GLUT_BITMAP_9_BY_15, menuItems[i]);
+
+        if (i == selectedItem) {
+            glColor3f(1.0, 1.0, 0.0); // Fundo branco para o item selecionado
+            glRectf(8, 18 + (i * 50), 120, 38 + (i * 50)); // Desenha o retângulo atrás do text
+        } else {
+            glColor4f(0.2, 0.2, 0.8, 0.4); // Fundo com transparência para itens não selecionados
+            glRectf(8, 18 + (i * 50), 120, 38 + (i * 50)); // Desenha o retângulo atrás do texto
+        }
+    }
+
+    // Desabilitar o blending após o uso
+    glDisable(GL_BLEND);
+
+    // Habilitar novamente texturas e iluminação
+    glEnable(GL_TEXTURE_2D);
+    glEnable(GL_LIGHTING);
+
+    // Restaura a matriz de modelo original
+    glPopMatrix();
+    
+    // Restaura a matriz de projeção original (perspectiva)
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+
+    // Volta para a matriz de modelo para evitar interferências
+    glMatrixMode(GL_MODELVIEW);
+
+    glFlush(); // Garante que os comandos sejam executados
+}
+
+
 
 void loadTextures() {
     // Carregar a textura do Sol
@@ -225,6 +392,8 @@ void loadTextures() {
 }
 
 void init() {
+    //glEnable(GL_BLEND); // Habilita o blending (mistura de cores)
+    //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // Define a função de blend
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_LIGHTING);
     glEnable(GL_LIGHT0);
@@ -313,6 +482,13 @@ void drawPlanet(float distance, float size, float translationAngle, GLuint textu
 
 void display() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    if (showControlersInfo == true) {
+        renderPopUp();
+    } else {
+        renderMenu();
+    }
+
     glLoadIdentity();
 
     // Definir a câmera com sua posição e a direção de onde está "olhando"
@@ -408,6 +584,23 @@ void update(int value) {
     glutTimerFunc(16, update, 0);
 }
 
+
+//Função para pegar as teclas das 'setinhas'
+void specialKeys(int key, int x, int y) {
+    switch (key) {
+        case GLUT_KEY_UP: // Sobe no menu
+            selectedItem++;
+            if (selectedItem > 1) selectedItem = 1;
+            break;
+        case GLUT_KEY_DOWN: // Desce no menu
+            selectedItem--;
+            if (selectedItem < 0) selectedItem = 0;
+            break;
+    }
+
+    glutPostRedisplay();
+}
+
 // Função para capturar teclas de controle da câmera
 // Precisa detectar a tecla pressionada e liberada
 void movementKeys(unsigned char key, int x, int y) {
@@ -473,8 +666,16 @@ void handleKeys(unsigned char key, int x, int y){
         case 'l':
             desenhaOrbita = !desenhaOrbita;
             break;
-        case 27:   // Tecla ESC para sair
-            exit(0);
+        case 27:   // Tecla ESC para apagar o Pop-up
+            showControlersInfo = false;
+            break;
+        case 13: // Enter
+            std::cout << "Apertou o ENTER" << std::endl;
+            if (selectedItem == 0) {
+                exit(0);
+            } else if (selectedItem == 1) {
+                showControlersInfo = true;
+            }
             break;
     }
     glutPostRedisplay();
@@ -495,11 +696,11 @@ int main(int argc, char** argv) {
     glutCreateWindow("Sistema Solar em OpenGL");
 
     init();
-    loadTextures();
     glutDisplayFunc(display);
     glutReshapeFunc(reshape);
     glutKeyboardFunc(handleKeys);        // Captura teclas pressionadas
     glutKeyboardUpFunc(movementKeys);     // Captura quando as teclas são liberadas
+    glutSpecialFunc(specialKeys);       //Captura as teclas especias como as setinhas do teclado
     glutTimerFunc(25, update, 0);
 
     glutMainLoop();
