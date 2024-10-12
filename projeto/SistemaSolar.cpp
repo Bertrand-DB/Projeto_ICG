@@ -9,7 +9,7 @@
 #define DISTANCIA_ESCALA    3.0f
 #define COMPENSACAO         20.0f
 #define RAIO_ESCALA         0.1f
-#define SENSIBILIDADE       0.001f
+#define SENSIBILIDADE       0.002f
 #define SUN                 0
 #define MERCURY             1
 #define VENUS               2
@@ -32,6 +32,15 @@ struct Planet {
     float rotationAngle;    // Ângulo atual de rotação
     GLuint texture;         // ID da textura
 };
+
+struct Camera{
+    float x;
+    float y;
+    float z;
+    float angleH;
+    float angleV;
+};
+
 
 Planet astros[11];
 
@@ -216,6 +225,24 @@ void init() {
     initObjects();  // Inicia os valores dos objetos
 }
 
+bool cameraLocked = false; // Variável para controlar se a câmera está bloqueada no planeta
+int focusedPlanet = 5; // Índice do planeta que está sendo focalizado
+
+// Função de atualização da câmera
+void updateCamera() {
+    // Calcula a posição do planeta que está sendo seguido
+    float planetZ = astros[focusedPlanet].distance * cos(astros[focusedPlanet].orbitAngle*0.0174533+1.4);
+    float planetX = astros[focusedPlanet].distance * sin(astros[focusedPlanet].orbitAngle*0.0174533+1.4);
+    //std::cout << "planeta: "<< planetX << "|" << planetZ << std::endl;
+    // Atualiza a posição da câmera para estar um pouco acima do planeta
+    cameraX = planetX;
+    cameraY = 0.0f;
+    cameraZ = planetZ; // Distância em relação ao planeta
+
+    cameraAngleH = -astros[focusedPlanet].orbitAngle*0.0174533+0.1;
+    
+}
+
 // Função para atualizar a direção da câmera baseado em seus ângulos
 void updateCameraLookDirection() {
     cameraLookX = sin(cameraAngleH) * cos(cameraAngleV);
@@ -388,25 +415,28 @@ void update(int value) {
         }
     }
 
-    // Atualiza a posição da câmera com base na direção de visualização
-    if (moveFoward) {
-        cameraX += cameraLookX * movementSpeed;
-        cameraZ += cameraLookZ * movementSpeed;
+    if(cameraLocked) updateCamera();
+
+    if (!cameraLocked){    // Atualiza a posição da câmera com base na direção de visualização
+        if (moveFoward) {
+            cameraX += cameraLookX * movementSpeed;
+            cameraZ += cameraLookZ * movementSpeed;
+        }
+        if (moveBackward) {
+            cameraX -= cameraLookX * movementSpeed;
+            cameraZ -= cameraLookZ * movementSpeed;
+        }
+        if (moveLeft) {
+            cameraX += cameraLookZ * movementSpeed;
+            cameraZ -= cameraLookX * movementSpeed;
+        }
+        if (moveRight) {
+            cameraX -= cameraLookZ * movementSpeed;
+            cameraZ += cameraLookX * movementSpeed;
+        }
+        if (moveUp) cameraY += movementSpeed;
+        if (moveDown) cameraY -= movementSpeed;
     }
-    if (moveBackward) {
-        cameraX -= cameraLookX * movementSpeed;
-        cameraZ -= cameraLookZ * movementSpeed;
-    }
-    if (moveLeft) {
-        cameraX += cameraLookZ * movementSpeed;
-        cameraZ -= cameraLookX * movementSpeed;
-    }
-    if (moveRight) {
-        cameraX -= cameraLookZ * movementSpeed;
-        cameraZ += cameraLookX * movementSpeed;
-    }
-    if (moveUp) cameraY += movementSpeed;
-    if (moveDown) cameraY -= movementSpeed;
     
     updateCameraLookDirection();
     glutPostRedisplay();
@@ -419,8 +449,8 @@ void mouseMotion(int x, int y) {
     int deltaY = y - lastMouseY;
 
     // Atualizar ângulos da câmera com base no movimento do mouse
-    cameraAngleH -= deltaX * SENSIBILIDADE;
-    cameraAngleV += deltaY * SENSIBILIDADE;
+    cameraAngleH += deltaX * SENSIBILIDADE;
+    cameraAngleV -= deltaY * SENSIBILIDADE;
 
     // Limitar a inclinação da câmera
     if (cameraAngleV > 1.5f) cameraAngleV = 1.5f; // Limite superior
@@ -432,12 +462,10 @@ void mouseMotion(int x, int y) {
 
 // Função para capturar o botão do mouse (opcional)
 void mouseButton(int button, int state, int x, int y) {
-    if (button == GLUT_LEFT_BUTTON) {
-        if (state == GLUT_DOWN) {
-            // Armazenar a posição do mouse quando o botão é pressionado
-            lastMouseX = x;
-            lastMouseY = y;
-        }
+    if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
+        // Armazenar a posição do mouse quando o botão é pressionado
+        lastMouseX = x;
+        lastMouseY = y;
     }
 }
 
@@ -477,6 +505,10 @@ void handleKeys(unsigned char key, int x, int y){
             break;
         case 'P':
             rotacao = !rotacao;
+            break;
+        case '6':
+            cameraLocked = !cameraLocked;
+
             break;
         case '1':   // Define a velocidade das órbitas
             velOrbitalPadrao = 0.5f;
@@ -519,7 +551,6 @@ int main(int argc, char** argv) {
     glutCreateWindow("Sistema Solar em OpenGL");
 
     init();
-    loadTextures();
     glutDisplayFunc(display);
     glutReshapeFunc(reshape);
     glutKeyboardFunc(handleKeys);        // Captura teclas pressionadas
