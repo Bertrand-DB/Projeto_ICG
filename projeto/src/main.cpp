@@ -98,27 +98,27 @@ void configurarTextura(GLuint texturaID) {
 // Função para carregar todas as texturas dos astros
 void loadTextures() {
     // Carrega as texturas para cada astro e atribui aos atributos correspondentes
-    sun.textura = loadTexture("assets/sun.jpg");
-    mercury.textura = loadTexture("assets/mercury.jpg");
-    venus.textura = loadTexture("assets/venus.jpg");
-    earth.textura = loadTexture("assets/earth.jpg");
-    mars.textura = loadTexture("assets/mars.jpg");
-    jupiter.textura = loadTexture("assets/jupiter.jpg");
-    saturn.textura = loadTexture("assets/saturn.jpg");
-    uranus.textura = loadTexture("assets/uranus.jpg");
-    neptune.textura = loadTexture("assets/neptune.jpg");
+    sun.set_textura(loadTexture("assets/sun.jpg"));
+    mercury.set_textura(loadTexture("assets/mercury.jpg"));
+    venus.set_textura(loadTexture("assets/venus.jpg"));
+    earth.set_textura(loadTexture("assets/earth.jpg"));
+    mars.set_textura(loadTexture("assets/mars.jpg"));
+    jupiter.set_textura(loadTexture("assets/jupiter.jpg"));
+    saturn.set_textura(loadTexture("assets/saturn.jpg"));
+    uranus.set_textura(loadTexture("assets/uranus.jpg"));
+    neptune.set_textura(loadTexture("assets/neptune.jpg"));
     backgroundTexture = loadTexture("assets/background.jpg");
 
     // Configura as texturas para cada astro
-    configurarTextura(sun.textura);
-    configurarTextura(mercury.textura);
-    configurarTextura(venus.textura);
-    configurarTextura(earth.textura);
-    configurarTextura(mars.textura);
-    configurarTextura(jupiter.textura);
-    configurarTextura(saturn.textura);
-    configurarTextura(uranus.textura);
-    configurarTextura(neptune.textura);
+    configurarTextura(sun.get_textura());
+    configurarTextura(mercury.get_textura());
+    configurarTextura(venus.get_textura());
+    configurarTextura(earth.get_textura());
+    configurarTextura(mars.get_textura());
+    configurarTextura(jupiter.get_textura());
+    configurarTextura(saturn.get_textura());
+    configurarTextura(uranus.get_textura());
+    configurarTextura(neptune.get_textura());
     configurarTextura(backgroundTexture);
 }
 
@@ -181,26 +181,26 @@ void drawBackground() {
 }
 
 // Função para desenhar um planeta com base na estrutura Astro
-void drawPlanet(const Astro& astro) {
+void drawPlanet(Astro& astro) {
     glPushMatrix(); // Salvar o estado atual da matriz
 
     // Se a opção de desenhar órbitas estiver habilitada, desenha a órbita do planeta
-    if(desenhaOrbita) drawOrbit(astro.distancia);
+    if(desenhaOrbita) drawOrbit(astro.get_distancia());
     
     // Rotação do planeta em torno do sol (translação)
-    glRotatef(astro.anguloTranslacao, 0.0f, 1.0f, 0.0f); 
-    glTranslatef(astro.distancia, 0.0f, 0.0f); // Posição do planeta em relação ao Sol
+    glRotatef(astro.get_anguloTranslacao(), 0.0f, 1.0f, 0.0f); 
+    glTranslatef(astro.get_distancia(), 0.0f, 0.0f); // Posição do planeta em relação ao Sol
     
     // Inclinação do eixo de rotação (em torno do eixo X)
-    glRotatef(astro.inclinacaoEixo - 90, 1.0f, 0.0f, 0.0f);
+    glRotatef(astro.get_inclinacaoEixo() - 90, 1.0f, 0.0f, 0.0f);
 
     // Rotação em torno do próprio eixo
-    glRotatef(astro.anguloRotacao, 0.0f, 0.0f, 1.0f);
+    glRotatef(astro.get_anguloRotacao(), 0.0f, 0.0f, 1.0f);
     
     // Se houver textura associada ao planeta, habilita a texturização
-    if (astro.textura) {
+    if (astro.get_textura()) {
         glEnable(GL_TEXTURE_2D);
-        glBindTexture(GL_TEXTURE_2D, astro.textura);  // Associar a textura do planeta
+        glBindTexture(GL_TEXTURE_2D, astro.get_textura());  // Associar a textura do planeta
         glColor3f(1.0f, 1.0f, 1.0f);  // Branco para permitir a visualização da textura
     } else {
         glDisable(GL_TEXTURE_2D);  // Desabilitar texturas se não houver
@@ -209,7 +209,7 @@ void drawPlanet(const Astro& astro) {
     // Desenhar a esfera do planeta com textura
     GLUquadric* quadric = gluNewQuadric(); // Criar um novo objeto quadrático
     gluQuadricTexture(quadric, GL_TRUE); // Habilitar texturização para o quadrático
-    gluSphere(quadric, astro.raio, 50, 50); // Desenhar a esfera com o raio do planeta
+    gluSphere(quadric, astro.get_raio(), 50, 50); // Desenhar a esfera com o raio do planeta
     gluDeleteQuadric(quadric); // Deletar o objeto quadrático após uso
 
     glPopMatrix(); // Restaurar o estado da matriz anterior
@@ -261,27 +261,27 @@ void update(int value) {
     // Atualiza os ângulos de translação dos planetas em relação ao Sol
     // Cada planeta se move a uma velocidade proporcional à Terra
     if (translacao) { // Verifica se a translação está ativada
-        mercury.anguloTranslacao += 4.1505681818 * velOrbitalPadrao; // Atualiza o ângulo de translação do Mercúrio
-        venus.anguloTranslacao += 1.6233333333 * velOrbitalPadrao; // Atualiza o ângulo de translação de Vênus
-        earth.anguloTranslacao += velOrbitalPadrao; // Atualiza o ângulo de translação da Terra
-        mars.anguloTranslacao += 0.5316593886 * velOrbitalPadrao; // Atualiza o ângulo de translação de Marte
-        jupiter.anguloTranslacao += 0.0843144044 * velOrbitalPadrao; // Atualiza o ângulo de translação de Júpiter
-        saturn.anguloTranslacao += 0.0339483223 * velOrbitalPadrao; // Atualiza o ângulo de translação de Saturno
-        uranus.anguloTranslacao += 0.0119125273 * velOrbitalPadrao; // Atualiza o ângulo de translação de Urano
-        neptune.anguloTranslacao += 0.0060669734 * velOrbitalPadrao; // Atualiza o ângulo de translação de Netuno
+        mercury.update_anguloTranslacao(4.1505681818 * velOrbitalPadrao); // Atualiza o ângulo de translação do Mercúrio
+        venus.update_anguloTranslacao(1.6233333333 * velOrbitalPadrao); // Atualiza o ângulo de translação de Vênus
+        earth.update_anguloTranslacao(velOrbitalPadrao); // Atualiza o ângulo de translação da Terra
+        mars.update_anguloTranslacao(0.5316593886 * velOrbitalPadrao); // Atualiza o ângulo de translação de Marte
+        jupiter.update_anguloTranslacao(0.0843144044 * velOrbitalPadrao); // Atualiza o ângulo de translação de Júpiter
+        saturn.update_anguloTranslacao(0.0339483223 * velOrbitalPadrao); // Atualiza o ângulo de translação de Saturno
+        uranus.update_anguloTranslacao(0.0119125273 * velOrbitalPadrao); // Atualiza o ângulo de translação de Urano
+        neptune.update_anguloTranslacao(0.0060669734 * velOrbitalPadrao); // Atualiza o ângulo de translação de Netuno
     }
 
     // Atualiza os ângulos de rotação dos planetas em torno do seu próprio eixo
     if (rotacao) { // Verifica se a rotação está ativada
-        sun.anguloRotacao += 0.03703703704 * velRotacaoPadrao; // Atualiza o ângulo de rotação do Sol
-        mercury.anguloRotacao += 0.01705146131 * velRotacaoPadrao; // Atualiza o ângulo de rotação do Mercúrio
-        venus.anguloRotacao += 0.004115056994 * velRotacaoPadrao; // Atualiza o ângulo de rotação de Vênus
-        earth.anguloRotacao += velRotacaoPadrao; // Atualiza o ângulo de rotação da Terra
-        mars.anguloRotacao += 0.9747072494 * velRotacaoPadrao; // Atualiza o ângulo de rotação de Marte
-        jupiter.anguloRotacao += 2.4182037 * velRotacaoPadrao; // Atualiza o ângulo de rotação de Júpiter
-        saturn.anguloRotacao += 2.345340536 * velRotacaoPadrao; // Atualiza o ângulo de rotação de Saturno
-        uranus.anguloRotacao += 1.392111369 * velRotacaoPadrao; // Atualiza o ângulo de rotação de Urano
-        neptune.anguloRotacao += 1.489757914 * velRotacaoPadrao; // Atualiza o ângulo de rotação de Netuno
+        sun.update_anguloRotacao(0.03703703704 * velRotacaoPadrao); // Atualiza o ângulo de rotação do Sol
+        mercury.update_anguloRotacao(0.01705146131 * velRotacaoPadrao); // Atualiza o ângulo de rotação do Mercúrio
+        venus.update_anguloRotacao(0.004115056994 * velRotacaoPadrao); // Atualiza o ângulo de rotação de Vênus
+        earth.update_anguloRotacao(velRotacaoPadrao); // Atualiza o ângulo de rotação da Terra
+        mars.update_anguloRotacao(0.9747072494 * velRotacaoPadrao); // Atualiza o ângulo de rotação de Marte
+        jupiter.update_anguloRotacao(2.4182037 * velRotacaoPadrao); // Atualiza o ângulo de rotação de Júpiter
+        saturn.update_anguloRotacao(2.345340536 * velRotacaoPadrao); // Atualiza o ângulo de rotação de Saturno
+        uranus.update_anguloRotacao(1.392111369 * velRotacaoPadrao); // Atualiza o ângulo de rotação de Urano
+        neptune.update_anguloRotacao(1.489757914 * velRotacaoPadrao); // Atualiza o ângulo de rotação de Netuno
     }
     
     // Atualiza a direção de visualização da câmera baseado na entrada do usuário
