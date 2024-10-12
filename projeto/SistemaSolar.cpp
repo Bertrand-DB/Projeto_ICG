@@ -4,56 +4,50 @@
 #include <cmath>
 #include <cstdio>
 #include <iostream>
+#include <string>
 
-// Ângulos de inclinação do eixo de rotação
-#define INCLINACAO_EIXO_MERCURIO    0.01f
-#define INCLINACAO_EIXO_VENUS       177.3f
-#define INCLINACAO_EIXO_TERRA       23.26f
-#define INCLINACAO_EIXO_MARTE       25.19f
-#define INCLINACAO_EIXO_JUPITER     3.13f
-#define INCLINACAO_EIXO_SATURNO     26.73f
-#define INCLINACAO_EIXO_URANO       97.77f
-#define INCLINACAO_EIXO_NETUNO      28.32f
-
-#define DISTANCIA_PADRAO    3.0f
+#define DISTANCIA_ESCALA    3.0f
 #define COMPENSACAO         20.0f
-#define RAIO_PADRAO         0.1f
+#define RAIO_ESCALA         0.1f
 #define SENSIBILIDADE       0.001f
+#define SUN                 0
+#define MERCURY             1
+#define VENUS               2
+#define EARTH               3
+#define MARS                4
+#define JUPITER             5
+#define SATURN              6
+#define URANUS              7
+#define NEPTUNE             8
+#define SATURNRING          9
+#define SKY                 10
 
-// Variável para armazenar as textura do sol e dos planetas
-GLuint sunTexture;
-GLuint mercuryTexture;
-GLuint venusTexture;
-GLuint earthTexture;
-GLuint marsTexture;
-GLuint jupiterTexture;
-GLuint saturnTexture;
-GLuint saturnRingTexture;
-GLuint uranusTexture;
-GLuint neptuneTexture;
-GLuint backgroundTexture;
+struct Planet {
+    float distance;         // Distância do sol
+    float radius;           // Raio do planeta
+    float axialTilt;        // Inclinação do eixo de rotação
+    float orbitSpeed;       // Velocidade orbital
+    float rotationSpeed;    // Velocidade de rotação
+    float orbitAngle;       // Ângulo atual na órbita
+    float rotationAngle;    // Ângulo atual de rotação
+    GLuint texture;         // ID da textura
+};
 
+Planet astros[11];
 
-// Ângulos de translação (posição em órbita) dos planetas em graus
-float mercuryTransAngle = 0.00f;
-float venusTransAngle = 0.00f;
-float earthTransAngle = 0.00f;
-float marsTransAngle = 0.00f;
-float jupiterTransAngle = 0.00f;
-float saturnTransAngle = 0.00f;
-float uranusTransAngle = 0.00f;
-float neptuneTransAngle = 0.00f;
-
-// Ângulos de rotação (no próprio eixo) dos planetas em graus
-float sunRotAngle = 0.0f;
-float mercuryRotAngle = 0.00f;
-float venusRotAngle = 0.00f;
-float earthRotAngle = 0.00f;
-float marsRotAngle = 0.00f;
-float jupiterRotAngle = 0.00f;
-float saturnRotAngle = 0.00f;
-float uranusRotAngle = 0.00f;
-float neptuneRotAngle = 0.00f;
+std::string texturePath[11] = {
+    "texturas/sun.jpg",
+    "texturas/mercury.jpg",
+    "texturas/venus.jpg",
+    "texturas/earth.jpg",
+    "texturas/mars.jpg",
+    "texturas/jupiter.jpg",
+    "texturas/saturn.jpg",
+    "texturas/uranus.jpg",
+    "texturas/neptune.jpg",
+    "texturas/saturnRing.png",
+    "texturas/background.jpg"
+};
 
 float velOrbitalPadrao = 0.5f;
 float velRotacaoPadrao = 1.0f;
@@ -89,160 +83,125 @@ bool moveLeft = false;
 bool moveRight = false;
 bool moveFoward = false;
 bool moveBackward = false;
-bool lookUp = false;
-bool lookDown = false;
-bool lookLeft = false;
-bool lookRight = false;
+
 
 void loadTextures() {
-    // Carregar a textura do Sol
-    sunTexture = SOIL_load_OGL_texture("texturas/sun.jpg", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_INVERT_Y);
-    if (!sunTexture) {
-        printf("Falha ao carregar a textura do Sol!\n");
-        exit(1);
+
+    for (size_t i = 0; i <= 10; i++)
+    {
+        astros[i].texture = SOIL_load_OGL_texture(texturePath[i].c_str(), SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_INVERT_Y);
+        if (!astros[i].texture) {
+            printf("Falha ao carregar a textura %s !", texturePath[i].c_str());
+            exit(1);
+        }
+        glBindTexture(GL_TEXTURE_2D, astros[i].texture);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     }
-    
-    // Carregar as texturas dos planetas
-    // Mercúrio
-    mercuryTexture = SOIL_load_OGL_texture("texturas/mercury.jpg", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_INVERT_Y);
-    if (!mercuryTexture) {
-        printf("Falha ao carregar a textura de Mercúrio!\n");
-        exit(1);
-    }
+}
 
-    // Vênus
-    venusTexture = SOIL_load_OGL_texture("texturas/venus.jpg", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_INVERT_Y);
-    if (!venusTexture) {
-        printf("Falha ao carregar a textura de Vênus!\n");
-        exit(1);
-    }
-    
-    // Terra
-    earthTexture = SOIL_load_OGL_texture("texturas/earth.jpg", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_INVERT_Y);
-    if (!earthTexture) {
-        printf("Falha ao carregar a textura da Terra!\n");
-        exit(1);
-    }
-    
-    // Marte
-    marsTexture = SOIL_load_OGL_texture("texturas/mars.jpg", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_INVERT_Y);
-    if (!marsTexture) {
-        printf("Falha ao carregar a textura de Marte!\n");
-        exit(1);
-    }
-    
-    // Júpiter
-    jupiterTexture = SOIL_load_OGL_texture("texturas/jupiter.jpg", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_INVERT_Y);
-    if (!jupiterTexture) {
-        printf("Falha ao carregar a textura de Júpiter!\n");
-        exit(1);
-    }
+void initObjects(){
 
-    // Saturno
-    saturnTexture = SOIL_load_OGL_texture("texturas/saturn.jpg", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_INVERT_Y);
-    if (!saturnTexture) {
-        printf("Falha ao carregar a textura de Saturno!\n");
-        exit(1);
-    }
+    //Sun
+    astros[0].distance = 0.0f;
+    astros[0].radius = 109*RAIO_ESCALA;
+    astros[0].axialTilt = 0.0f;
+    astros[0].orbitSpeed = 0.0f;
+    astros[0].rotationSpeed = 0.03703703704*velRotacaoPadrao;
+    astros[0].orbitAngle = 0.0f;
+    astros[0].rotationAngle = 0.0f;
 
-    // Anel de Saturno
-    saturnRingTexture = SOIL_load_OGL_texture("texturas/saturnRing.png", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_INVERT_Y);
-    if (!saturnRingTexture) {
-        printf("Falha ao carregar a textura do anel de Saturno!\n");
-        exit(1);
-    }
+    //Mercury
+    astros[1].distance = 0.39*DISTANCIA_ESCALA+COMPENSACAO;
+    astros[1].radius = 0.38*RAIO_ESCALA;
+    astros[1].axialTilt = 0.01f;
+    astros[1].orbitSpeed = 4.1505681818*velOrbitalPadrao;
+    astros[1].rotationSpeed = 0.01705146131*velRotacaoPadrao;
+    astros[1].orbitAngle = 0.0f;
+    astros[1].rotationAngle = 0.0f;
 
-    // Urano
-    uranusTexture = SOIL_load_OGL_texture("texturas/uranus.jpg", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_INVERT_Y);
-    if (!uranusTexture) {
-        printf("Falha ao carregar a textura de Urano!\n");
-        exit(1);
-    }
+    //Venus
+    astros[2].distance = 0.72*DISTANCIA_ESCALA+COMPENSACAO;
+    astros[2].radius = 0.95*RAIO_ESCALA;
+    astros[2].axialTilt = 177.3f;
+    astros[2].orbitSpeed = 1.6233333333*velOrbitalPadrao;
+    astros[2].rotationSpeed = 0.004115056994*velRotacaoPadrao;
+    astros[2].orbitAngle = 0.0f;
+    astros[2].rotationAngle = 0.0f;
 
-    // Neturno
-    neptuneTexture = SOIL_load_OGL_texture("texturas/neptune.jpg", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_INVERT_Y);
-    if (!neptuneTexture) {
-        printf("Falha ao carregar a textura de Netuno!\n");
-        exit(1);
-    }
+    //Earth
+    astros[3].distance = DISTANCIA_ESCALA+COMPENSACAO;
+    astros[3].radius = RAIO_ESCALA;
+    astros[3].axialTilt = 23.26f;
+    astros[3].orbitSpeed = velOrbitalPadrao;
+    astros[3].rotationSpeed = velRotacaoPadrao;
+    astros[3].orbitAngle = 0.0f;
+    astros[3].rotationAngle = 0.0f;
 
-    // Fundo
-    backgroundTexture = SOIL_load_OGL_texture("texturas/background.jpg", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_INVERT_Y);
-    if (!backgroundTexture) {
-        printf("Falha ao carregar a textura de fundo!\n");
-        exit(1);
-    }
+    //Mars
+    astros[4].distance = 1.52*DISTANCIA_ESCALA+COMPENSACAO;
+    astros[4].radius = 0.53*RAIO_ESCALA;
+    astros[4].axialTilt = 25.19f;
+    astros[4].orbitSpeed = 0.5316593886*velOrbitalPadrao;
+    astros[4].rotationSpeed = 0.9747072494*velRotacaoPadrao;
+    astros[4].orbitAngle = 0.0f;
+    astros[4].rotationAngle = 0.0f;
 
-    // Configurações da textura do Sol
-    glBindTexture(GL_TEXTURE_2D, sunTexture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    //Jupiter
+    astros[5].distance = 5.2*DISTANCIA_ESCALA+COMPENSACAO;
+    astros[5].radius = 11.21*RAIO_ESCALA;
+    astros[5].axialTilt = 3.13f;
+    astros[5].orbitSpeed = 0.0843144044*velOrbitalPadrao;
+    astros[5].rotationSpeed = 2.4182037*velRotacaoPadrao;
+    astros[5].orbitAngle = 0.0f;
+    astros[5].rotationAngle = 0.0f;
 
-    // Configurações das texturas dos planetas
-    // Mercúrio
-    glBindTexture(GL_TEXTURE_2D, mercuryTexture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    //Saturn
+    astros[6].distance = 9.58*DISTANCIA_ESCALA+COMPENSACAO;
+    astros[6].radius = 9.45*RAIO_ESCALA;
+    astros[6].axialTilt = 26.73f;
+    astros[6].orbitSpeed = 0.0339483223*velOrbitalPadrao;
+    astros[6].rotationSpeed = 2.345340536*velRotacaoPadrao;
+    astros[6].orbitAngle = 0.0f;
+    astros[6].rotationAngle = 0.0f;
 
-    // Vênus
-    glBindTexture(GL_TEXTURE_2D, venusTexture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    
-    // Terra
-    glBindTexture(GL_TEXTURE_2D, earthTexture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    
-    // Marte
-    glBindTexture(GL_TEXTURE_2D, marsTexture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    //Uranus
+    astros[7].distance = 19.18*DISTANCIA_ESCALA+COMPENSACAO;
+    astros[7].radius = 4.01*RAIO_ESCALA;
+    astros[7].axialTilt = 97.77f;
+    astros[7].orbitSpeed = 0.0119125273*velOrbitalPadrao;
+    astros[7].rotationSpeed = 1.392111369*velRotacaoPadrao;
+    astros[7].orbitAngle = 0.0f;
+    astros[7].rotationAngle = 0.0f;
 
-    // Júpiter
-    glBindTexture(GL_TEXTURE_2D, jupiterTexture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    
-    // Saturno
-    glBindTexture(GL_TEXTURE_2D, saturnTexture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    //Neptune
+    astros[8].distance = 30.07*DISTANCIA_ESCALA+COMPENSACAO;
+    astros[8].radius = 3.88*RAIO_ESCALA;
+    astros[8].axialTilt = 28.32f;
+    astros[8].orbitSpeed = 0.0060669734*velOrbitalPadrao;
+    astros[8].rotationSpeed = 1.489757914*velRotacaoPadrao;
+    astros[8].orbitAngle = 0.0f;
+    astros[8].rotationAngle = 0.0f;
 
-    // Anel de Saturno
-    glBindTexture(GL_TEXTURE_2D, saturnRingTexture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    
-    // Urano
-    glBindTexture(GL_TEXTURE_2D, uranusTexture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    //Saturn ring
+    astros[9].distance = astros[6].distance;
+    astros[9].radius = astros[6].radius;
+    astros[9].axialTilt = 26.73f;
+    astros[9].orbitSpeed = astros[6].orbitSpeed;
+    astros[9].rotationSpeed = 0.0f;
+    astros[9].orbitAngle = 0.0f;
+    astros[9].rotationAngle = 0.0f;
 
-    // Netuno
-    glBindTexture(GL_TEXTURE_2D, neptuneTexture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    //Sky
+    astros[10].distance = 0.0f;
+    astros[10].radius = 200.0f;
+    astros[10].axialTilt = 90.0f;
+    astros[10].orbitSpeed = 0.0f;
+    astros[10].rotationSpeed = 0.0f;
+    astros[10].orbitAngle = 0.0f;
+    astros[10].rotationAngle = 0.0f;
 }
 
 void init() {
@@ -253,7 +212,8 @@ void init() {
     glEnable(GL_TEXTURE_2D);  // Habilitar texturas
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
-    loadTextures();  // Carregar as texturas
+    loadTextures(); // Carregar as texturas
+    initObjects();  // Inicia os valores dos objetos
 }
 
 // Função para atualizar a direção da câmera baseado em seus ângulos
@@ -287,7 +247,7 @@ void drawBackground() {
     glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
     glDisable(GL_LIGHTING);  // Desabilitar iluminação para o fundo
     glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, backgroundTexture);  // Associar a textura de fundo
+    glBindTexture(GL_TEXTURE_2D, astros[SKY].texture);  // Associar a textura de fundo
     glColor3f(1.0f, 1.0f, 1.0f);  // Branco para permitir a visualização da textura
 
     // Desenhar uma esfera grande ao redor da cena para o background
@@ -300,31 +260,28 @@ void drawBackground() {
     glPopMatrix();
 }
 
-void drawRing(float distance, float size, float translationAngle, GLuint texture, float axialTilt, float rotationAngle){
+void drawSaturnRing(){
     glPushMatrix();
     
     // Aplicar a textura ao anel
     glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, saturnRingTexture);
+    glBindTexture(GL_TEXTURE_2D, astros[SATURNRING].texture);
 
-    // Ativar blending para melhorar a aparência do anel (se a textura tiver transparência)
+    // Ativar blending para melhorar a aparência do anel (textura com transparência)
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // Posicionar o anel no centro de Saturno
-    glRotatef(translationAngle, 0.0f, 1.0f, 0.0f); // Rotação do planeta em torno do sol (translação)
-    glTranslatef(distance, 0.0f, 0.0f); // Posição do planeta em relação ao Sol
-    glRotatef(-translationAngle, 0.0f, 1.0f, 0.0f);
+    glRotatef(astros[SATURNRING].orbitAngle, 0.0f, 1.0f, 0.0f); // Rotação do planeta em torno do sol (translação)
+    glTranslatef(astros[SATURNRING].distance, 0.0f, 0.0f); // Posição do planeta em relação ao Sol
+    glRotatef(-astros[SATURNRING].orbitAngle, 0.0f, 1.0f, 0.0f);
     
     // Inclinar o anel de acordo com a inclinação de Saturno
-    glRotatef(axialTilt, 1.0f, 0.0f, 0.0f); // Inclinação de 23.26 graus no eixo X
-
-    // Rotação em torno do próprio eixo
-    glRotatef(rotationAngle, 0.0f, 1.0f, 0.0f);
+    glRotatef(astros[SATURNRING].axialTilt, 1.0f, 0.0f, 0.0f); // Inclinação no eixo X
     
     int segments = 300;
-    float raioInt = 1.1161478728*size;
-    float raioExt = 2.327404261*size;
+    float raioInt = 1.1161478728*astros[SATURNRING].radius;
+    float raioExt = 2.327404261*astros[SATURNRING].radius;
 
     glBegin(GL_QUAD_STRIP);
     
@@ -398,25 +355,19 @@ void display() {
     GLfloat emission[] = { 1.0f, 1.0f, 0.0f, 1.0f };
     glMaterialfv(GL_FRONT, GL_EMISSION, emission);
 
-    drawPlanet(0.0f, 109*RAIO_PADRAO, 0.0f, sunTexture, 0.0f, sunRotAngle); //Desenha o sol
+    drawPlanet(astros[SUN].distance, astros[SUN].radius, astros[SUN].orbitAngle, astros[SUN].texture, astros[SUN].axialTilt, astros[SUN].rotationAngle); //Desenha o sol
 
     // Desativar emissão
     GLfloat noEmission[] = { 0.0f, 0.0f, 0.0f, 1.0f };
     glMaterialfv(GL_FRONT, GL_EMISSION, noEmission);
 
     // Desenhar os planetas
-    // Distancia dos planetas em escala + compensação do raio do sol
-    drawPlanet(0.39*DISTANCIA_PADRAO+COMPENSACAO, 0.38*RAIO_PADRAO, mercuryTransAngle, mercuryTexture, INCLINACAO_EIXO_MERCURIO, mercuryRotAngle);
-    drawPlanet(0.72*DISTANCIA_PADRAO+COMPENSACAO, 0.95*RAIO_PADRAO, venusTransAngle, venusTexture, INCLINACAO_EIXO_VENUS, venusRotAngle);
-    drawPlanet(DISTANCIA_PADRAO+COMPENSACAO, RAIO_PADRAO, earthTransAngle, earthTexture, INCLINACAO_EIXO_TERRA, earthRotAngle);
-    drawPlanet(1.52*DISTANCIA_PADRAO+COMPENSACAO, 0.53*RAIO_PADRAO, marsTransAngle, marsTexture, INCLINACAO_EIXO_MARTE, marsRotAngle);
-    drawPlanet(5.2*DISTANCIA_PADRAO+COMPENSACAO, 11.21*RAIO_PADRAO, jupiterTransAngle, jupiterTexture, INCLINACAO_EIXO_JUPITER, jupiterRotAngle);
-    drawPlanet(9.58*DISTANCIA_PADRAO+COMPENSACAO, 9.45*RAIO_PADRAO, saturnTransAngle, saturnTexture, INCLINACAO_EIXO_SATURNO, saturnRotAngle);
-    drawPlanet(19.18*DISTANCIA_PADRAO+COMPENSACAO, 4.01*RAIO_PADRAO, uranusTransAngle, uranusTexture, INCLINACAO_EIXO_URANO, uranusRotAngle);
-    drawPlanet(30.07*DISTANCIA_PADRAO+COMPENSACAO, 3.88*RAIO_PADRAO, neptuneTransAngle, neptuneTexture, INCLINACAO_EIXO_NETUNO, neptuneRotAngle);
+    for (size_t i = 1; i <= 8; i++){
+        drawPlanet(astros[i].distance, astros[i].radius, astros[i].orbitAngle, astros[i].texture, astros[i].axialTilt, astros[i].rotationAngle);
+    }
 
     //desenha anel de saturno
-    drawRing(9.58*DISTANCIA_PADRAO+COMPENSACAO, 9.45*RAIO_PADRAO, saturnTransAngle, saturnRingTexture, INCLINACAO_EIXO_SATURNO, 0.0f);
+    drawSaturnRing();
 
     glutSwapBuffers();
 }
@@ -424,36 +375,18 @@ void display() {
 void update(int value) {
     // Cada planeta se move a uma velocidade proporcional em relação a terra
     // Atualiza os ângulos dos planetas em órbita em relacao ao sol somente se não estiver pausado
-    if (translacao) {
-        mercuryTransAngle += 4.1505681818*velOrbitalPadrao;
-        venusTransAngle += 1.6233333333*velOrbitalPadrao;
-        earthTransAngle += velOrbitalPadrao;
-        marsTransAngle += 0.5316593886*velOrbitalPadrao;
-        jupiterTransAngle += 0.0843144044*velOrbitalPadrao;
-        saturnTransAngle += 0.0339483223*velOrbitalPadrao;
-        uranusTransAngle += 0.0119125273*velOrbitalPadrao;
-        neptuneTransAngle += 0.0060669734*velOrbitalPadrao;
+    if (translacao){
+        for (size_t i = 1; i <= 9; i++){
+           astros[i].orbitAngle += astros[i].orbitSpeed;
+        }
     }
 
     // Atualiza os ângulos de rotação dos planetas em torno do proprio eixo somente se não estiver pausado
-    if (rotacao)
-    {
-        sunRotAngle += 0.03703703704*velRotacaoPadrao;
-        mercuryRotAngle += 0.01705146131*velRotacaoPadrao;
-        venusRotAngle += 0.004115056994*velRotacaoPadrao;
-        earthRotAngle += velRotacaoPadrao;
-        marsRotAngle += 0.9747072494*velRotacaoPadrao;
-        jupiterRotAngle += 2.4182037*velRotacaoPadrao;
-        saturnRotAngle += 2.345340536*velRotacaoPadrao;
-        uranusRotAngle += 1.392111369*velRotacaoPadrao;
-        neptuneRotAngle += 1.489757914*velRotacaoPadrao;
+    if (rotacao){
+        for (size_t i = 0; i <= 8; i++){
+           astros[i].rotationAngle += astros[i].rotationSpeed;
+        }
     }
-    
-    // Atualiza a direção de visualização da câmera
-    if (lookUp && cameraAngleV<1.5f) cameraAngleV += rotationSpeed;
-    if (lookDown && cameraAngleV>-1.5f) cameraAngleV -= rotationSpeed;
-    if (lookLeft) cameraAngleH -= rotationSpeed;
-    if (lookRight) cameraAngleH += rotationSpeed;
 
     // Atualiza a posição da câmera com base na direção de visualização
     if (moveFoward) {
