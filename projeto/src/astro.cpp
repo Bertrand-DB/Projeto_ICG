@@ -66,6 +66,30 @@ void Astro::set_textura(GLuint textura)
     this->textura = textura;
 }
 
+void Astro::draw() {
+    glPushMatrix();
+
+    glRotatef(this->anguloTranslacao, 0.0f, 1.0f, 0.0f);
+    glTranslatef(this->distancia, 0.0f, 0.0f);
+    glRotatef(this->inclinacaoEixo - 90, 1.0f, 0.0f, 0.0f);
+    glRotatef(this->anguloRotacao, 0.0f, 0.0f, 1.0f);
+
+    if (this->textura) {
+        glEnable(GL_TEXTURE_2D);
+        glBindTexture(GL_TEXTURE_2D, textura);
+        glColor3f(1.0f, 1.0f, 1.0f);
+    } else {
+        glDisable(GL_TEXTURE_2D);
+    }
+
+    GLUquadric* quadric = gluNewQuadric();
+    gluQuadricTexture(quadric, GL_TRUE);
+    gluSphere(quadric, this->raio, 50, 50);
+    gluDeleteQuadric(quadric);
+
+    glPopMatrix();
+}
+
 void Astro::update_anguloRotacao(float angulo)
 {
     this->anguloRotacao += angulo;

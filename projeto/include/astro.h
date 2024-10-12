@@ -32,6 +32,8 @@ public:
     void set_anguloTranslacao(float anguloTranslacao);
     void set_textura(GLuint textura);
 
+    void draw();
+
     void update_anguloRotacao(float anguloRotacao);
     void update_anguloTranslacao(float anguloTranslacao);
 };

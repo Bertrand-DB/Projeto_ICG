@@ -1,12 +1,14 @@
-//Comando de compilação: g++ src/main.cpp src/astro.cpp -o sis -lGL -lGLU -lSOIL  -lGLEW -lglut -lm
-
+//Comando de compilação: g++ src/main.cpp src/menu.cpp src/astro.cpp src/camera.cpp src/textura.cpp -o sis -lGL -lGLU -lSOIL -lGLEW -lglut -lm
 #include <cmath>
 #include <cstdio>
 #include <iostream>
 #include <GL/glut.h>
 #include <SOIL/SOIL.h>
 
+#include "../include/menu.h"
 #include "../include/astro.h"
+#include "../include/camera.h"
+#include "../include/textura.h"
 
 // Definições de constantes para a simulação de astros
 #define DISTANCIA_PADRAO    3.0f       // Distância padrão para os astros em relação ao Sol
@@ -36,24 +38,12 @@ Astro uranus(19.18*DISTANCIA_PADRAO+109*RAIO_PADRAO, 4.01*RAIO_PADRAO, INCLINACA
 Astro neptune(0.07*DISTANCIA_PADRAO+109*RAIO_PADRAO, 3.88*RAIO_PADRAO, INCLINACAO_EIXO_NETUNO, 0.0f, 0.0f, 0);
 
 GLuint backgroundTexture;
+GLuint saturnRingTexture;
 
 float velOrbitalPadrao = 0.5f;  // Velocidade orbital padrão
 float velRotacaoPadrao = 1.0f;   // Velocidade de rotação padrão
 
-// Posição espacial da câmera
-float cameraX = 2.97471;
-float cameraY = 46.4001;
-float cameraZ = 38.8908;
-
-// Posição angular da câmera
-float cameraAngleH = 0.58;
-float cameraAngleV = -0.8;
-
-float movementSpeed = 0.2f;  // Velocidade de movimento da câmera
-float rotationSpeed = 0.02f;  // Velocidade de rotação da câmera
-
-// Vetor direção da câmera
-float cameraLookX = 0.0f, cameraLookY = 0.0f, cameraLookZ = -1.0f;
+Camera camera(2.97471f, 46.4001f, 38.8908f, 0.0f, 0.0f, -1.0f, 0.58, -0.8, 0.2f, 0.02f);
 
 // Variável para pausar o movimento de translação
 bool translacao = true;
@@ -72,29 +62,6 @@ bool lookDown = false;
 bool lookLeft = false;
 bool lookRight = false;
 
-// Função para carregar uma textura a partir de um arquivo
-GLuint loadTexture(const char* path) {
-    GLuint texture = SOIL_load_OGL_texture(path, SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_INVERT_Y);
-    if (!texture) {
-        std::cerr << "Falha ao carregar a textura: " << path << std::endl;
-        exit(1); // Encerra o programa em caso de falha no carregamento
-    }
-    return texture; // Retorna o ID da textura carregada
-}
-
-// Função para configurar parâmetros de textura
-void configurarTextura(GLuint texturaID) {
-    glBindTexture(GL_TEXTURE_2D, texturaID); // Vincula a textura atual
-
-    // Configurações de repetição de textura (wrap)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // Envolve no eixo S
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT); // Envolve no eixo T
-
-    // Configurações de filtros de textura
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); // Filtro para minificação
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); // Filtro para ampliação
-}
-
 // Função para carregar todas as texturas dos astros
 void loadTextures() {
     // Carrega as texturas para cada astro e atribui aos atributos correspondentes
@@ -105,6 +72,7 @@ void loadTextures() {
     mars.set_textura(loadTexture("assets/mars.jpg"));
     jupiter.set_textura(loadTexture("assets/jupiter.jpg"));
     saturn.set_textura(loadTexture("assets/saturn.jpg"));
+    saturnRingTexture = loadTexture("assets/saturnRing.png");
     uranus.set_textura(loadTexture("assets/uranus.jpg"));
     neptune.set_textura(loadTexture("assets/neptune.jpg"));
     backgroundTexture = loadTexture("assets/background.jpg");
@@ -117,6 +85,7 @@ void loadTextures() {
     configurarTextura(mars.get_textura());
     configurarTextura(jupiter.get_textura());
     configurarTextura(saturn.get_textura());
+    configurarTextura(saturnRingTexture);
     configurarTextura(uranus.get_textura());
     configurarTextura(neptune.get_textura());
     configurarTextura(backgroundTexture);
@@ -132,13 +101,6 @@ void init() {
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Define a cor de fundo da janela
 
     loadTextures();  // Carregar as texturas
-}
-
-// Função para atualizar a direção da câmera baseado em seus ângulos
-void updateCameraLookDirection() {
-    cameraLookX = sin(cameraAngleH) * cos(cameraAngleV); // Calcula a direção no eixo X
-    cameraLookY = sin(cameraAngleV); // Calcula a direção no eixo Y
-    cameraLookZ = -cos(cameraAngleH) * cos(cameraAngleV); // Calcula a direção no eixo Z
 }
 
 // Função para desenhar a órbita de um planeta
@@ -180,6 +142,58 @@ void drawBackground() {
     glPopMatrix(); // Restaurar o estado da matriz anterior
 }
 
+void drawRing(float distance, float size, float translationAngle, GLuint texture, float axialTilt, float rotationAngle){
+    glPushMatrix();
+    
+    // Aplicar a textura ao anel
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, saturnRingTexture);
+
+    // Ativar blending para melhorar a aparência do anel (se a textura tiver transparência)
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    // Posicionar o anel no centro de Saturno
+    glRotatef(translationAngle, 0.0f, 1.0f, 0.0f); // Rotação do planeta em torno do sol (translação)
+    glTranslatef(distance, 0.0f, 0.0f); // Posição do planeta em relação ao Sol
+    glRotatef(-translationAngle, 0.0f, 1.0f, 0.0f);
+    
+    // Inclinar o anel de acordo com a inclinação de Saturno
+    glRotatef(axialTilt, 1.0f, 0.0f, 0.0f); // Inclinação de 23.26 graus no eixo X
+
+    // Rotação em torno do próprio eixo
+    glRotatef(rotationAngle, 0.0f, 1.0f, 0.0f);
+    
+    int segments = 300;
+    float raioInt = 1.1161478728*size;
+    float raioExt = 2.327404261*size;
+
+    glBegin(GL_QUAD_STRIP);
+    
+    for (int i = 0; i <= segments; i++) {
+        float angle = 2.0f * M_PI * i / segments;
+        float x = cos(angle);
+        float z = sin(angle);
+        float sCoord = (float)i / (float)segments;
+
+        glNormal3f(0.0f, 1.0f, 0.0f);  // Normal ajustada
+
+        // Outer ring
+        glTexCoord2f(sCoord, 1.0f); // Texture mapping
+        glVertex3f(raioExt * x, 0.0f, raioExt * z);
+
+        // Inner ring
+        glTexCoord2f(sCoord, 0.0f); // Texture mapping
+        glVertex3f(raioInt * x, 0.0f, raioInt * z);
+    }
+    glEnd();
+
+    // Desativar blend e textura
+    glDisable(GL_BLEND);
+    glDisable(GL_TEXTURE_2D);
+    glPopMatrix();
+}
+
 // Função para desenhar um planeta com base na estrutura Astro
 void drawPlanet(Astro& astro) {
     glPushMatrix(); // Salvar o estado atual da matriz
@@ -219,12 +233,17 @@ void drawPlanet(Astro& astro) {
 void display() {
     // Limpar os buffers de cor e profundidade
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    if (showControlersInfo == true) {
+        renderPopUp();
+    } else {
+        renderMenu();
+    }
+
     glLoadIdentity(); // Reseta a matriz de modelagem e visualização
 
     // Definir a câmera com sua posição e a direção de onde está "olhando"
-    gluLookAt(cameraX, cameraY, cameraZ,  // Posição da câmera
-              cameraX + cameraLookX, cameraY + cameraLookY, cameraZ + cameraLookZ, // Ponto para onde a câmera está olhando
-              0.0, 1.0, 0.0); // Vetor de up (vertical)
+    camera.applyView();
 
     drawBackground(); // Desenhar o fundo da cena
 
@@ -252,6 +271,9 @@ void display() {
     drawPlanet(saturn);
     drawPlanet(uranus);
     drawPlanet(neptune);
+
+    //desenha anel de saturno
+    drawRing(9.58*DISTANCIA_PADRAO+COMPENSACAO, 9.45*RAIO_PADRAO, saturn.get_anguloTranslacao(), saturnRingTexture, INCLINACAO_EIXO_SATURNO, 0.0f);
 
     glutSwapBuffers(); // Trocar os buffers para exibir a cena renderizada
 }
@@ -285,35 +307,47 @@ void update(int value) {
     }
     
     // Atualiza a direção de visualização da câmera baseado na entrada do usuário
-    if (lookUp && cameraAngleV < 1.5f) cameraAngleV += rotationSpeed; // Inclinar a câmera para cima
-    if (lookDown && cameraAngleV > -1.5f) cameraAngleV -= rotationSpeed; // Inclinar a câmera para baixo
-    if (lookLeft) cameraAngleH -= rotationSpeed; // Girar a câmera para a esquerda
-    if (lookRight) cameraAngleH += rotationSpeed; // Girar a câmera para a direita
+    if (lookUp && camera.get_angleV() < 1.5f) camera.update_lookUp(); // Inclinar a câmera para cima
+    if (lookDown && camera.get_angleV() > -1.5f) camera.update_lookDown(); // Inclinar a câmera para baixo
+    if (lookLeft) camera.update_lookLeft(); // Girar a câmera para a esquerda
+    if (lookRight) camera.update_lookRight(); // Girar a câmera para a direita
 
     // Atualiza a posição da câmera com base na direção de visualização
     if (moveFoward) { // Se a tecla de mover para frente estiver pressionada
-        cameraX += cameraLookX * movementSpeed; // Mover a câmera para frente na direção do olhar
-        cameraZ += cameraLookZ * movementSpeed; // Mover a câmera para frente na direção do olhar
+       camera.moveForward();
     }
     if (moveBackward) { // Se a tecla de mover para trás estiver pressionada
-        cameraX -= cameraLookX * movementSpeed; // Mover a câmera para trás na direção oposta ao olhar
-        cameraZ -= cameraLookZ * movementSpeed; // Mover a câmera para trás na direção oposta ao olhar
+       camera.moveBackward();
     }
     if (moveLeft) { // Se a tecla de mover para a esquerda estiver pressionada
-        cameraX += cameraLookZ * movementSpeed; // Mover a câmera para a esquerda
-        cameraZ -= cameraLookX * movementSpeed; // Mover a câmera para a esquerda
+       camera.moveLeft();
     }
     if (moveRight) { // Se a tecla de mover para a direita estiver pressionada
-        cameraX -= cameraLookZ * movementSpeed; // Mover a câmera para a direita
-        cameraZ += cameraLookX * movementSpeed; // Mover a câmera para a direita
+       camera.moveRight();
     }
-    if (moveUp) cameraY += movementSpeed; // Mover a câmera para cima
-    if (moveDown) cameraY -= movementSpeed; // Mover a câmera para baixo
+
+    if (moveUp) camera.rotateUp(); // Mover a câmera para cima
+    if (moveDown) camera.rotateDown(); // Mover a câmera para baixo
     
     // Atualiza a direção da câmera com base nos ângulos de visão
-    updateCameraLookDirection();
+    camera.updateLookDirection();
     glutPostRedisplay(); // Solicitar uma nova exibição
     glutTimerFunc(16, update, 0); // Chamar a função de atualização novamente após 16 ms
+}
+
+void specialKeys(int key, int x, int y) {
+    switch (key) {
+        case GLUT_KEY_UP: // Sobe no menu
+            selectedItem++;
+            if (selectedItem > 1) selectedItem = 1;
+            break;
+        case GLUT_KEY_DOWN: // Desce no menu
+            selectedItem--;
+            if (selectedItem < 0) selectedItem = 0;
+            break;
+    }
+
+    glutPostRedisplay();
 }
 
 // Função para capturar teclas de controle da câmera
@@ -374,17 +408,24 @@ void handleKeys(unsigned char key, int x, int y){
             velOrbitalPadrao = 4.0f; // Define a velocidade orbital padrão para 4.0
             break;
         case 'r':   // Reposiciona a câmera na posição inicial
-            cameraX = 2.97471; // Define a posição inicial da câmera no eixo X
-            cameraY = 46.4001; // Define a posição inicial da câmera no eixo Y
-            cameraZ = 38.8908; // Define a posição inicial da câmera no eixo Z
-            cameraAngleH = 0.58; // Define o ângulo horizontal inicial da câmera
-            cameraAngleV = -0.8; // Define o ângulo vertical inicial da câmera
+            camera.set_posX(2.97471); // Define a posição inicial da câmera no eixo X
+            camera.set_posY(46.4001); // Define a posição inicial da câmera no eixo Y
+            camera.set_posZ(38.8908); // Define a posição inicial da câmera no eixo Z
+            camera.set_angleH(0.58); // Define o ângulo horizontal inicial da câmera
+            camera.set_angleV(-0.8); // Define o ângulo vertical inicial da câmera
             break;
         case 'l': // Alternar a visualização da órbita
             desenhaOrbita = !desenhaOrbita; // Alterna o estado da visualização da órbita
             break;
         case 27:   // Tecla ESC para sair
             exit(0); // Encerra o programa
+            break;
+        case 13: // Enter
+            if (selectedItem == 0) {
+                exit(0);
+            } else if (selectedItem == 1) {
+                showControlersInfo = true;
+            }
             break;
     }
     glutPostRedisplay(); // Solicita uma nova exibição após a mudança de estado
@@ -407,11 +448,11 @@ int main(int argc, char** argv) {
     glutCreateWindow("Sistema Solar em OpenGL"); // Cria a janela com o título especificado
 
     init(); // Inicializa as configurações do OpenGL
-    loadTextures(); // Carrega as texturas necessárias
     glutDisplayFunc(display); // Define a função de exibição
     glutReshapeFunc(reshape); // Define a função de redimensionamento da janela
     glutKeyboardFunc(handleKeys); // Captura teclas pressionadas
     glutKeyboardUpFunc(movementKeys); // Captura quando as teclas são liberadas
+    glutSpecialFunc(specialKeys);       //Captura as teclas especias como as setinhas do teclado
     glutTimerFunc(25, update, 0); // Configura o temporizador para atualizações regulares
 
     glutMainLoop(); // Inicia o loop principal do GLUT
