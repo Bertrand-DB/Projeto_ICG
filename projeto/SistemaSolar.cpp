@@ -159,15 +159,17 @@ void renderPopUp() {
     int popupX = (windowWidth - popupWidth) / 2;
     int popupY = (windowHeight - popupHeight) / 2;
 
+    std::cout << "Valores da Tela(" << windowWidth << " - " << windowHeight <<") e popupX: " << popupX << " popupY: " << popupY << std::endl; 
+
     glColor3f(1.0, 1.0, 1.0); // Cor do texto branco
     for (int i = 0; i < 22; i++) {
         renderBitmapString(popupX + 10, popupY + 50 + (i * 15), GLUT_BITMAP_9_BY_15, popItems[i]);
     }
 
-    renderBitmapString(popupX + 200, popupY + 305, GLUT_BITMAP_TIMES_ROMAN_24, "Controles do Programa");
+    renderBitmapString(popupX + 200, popupY + 400, GLUT_BITMAP_TIMES_ROMAN_24, "Controles do Programa");
 
     glColor4f(0.0, 0.0, 0.0, 0.8); // Fundo preto com transparência
-    glRectf(popupX, popupY, popupX + popupWidth, popupY + popupHeight); // Desenha o pop-up
+    glRectf(popupX, popupY, (popupX + popupWidth) - 200, (popupY + popupHeight)); // Desenha o pop-up
 
     // Desabilitar o blending após o uso
     glDisable(GL_BLEND);
@@ -221,14 +223,15 @@ void renderMenu() {
         }
 
         // Renderiza o texto do item do menu
-        renderBitmapString(10, 30 + (i * 50), GLUT_BITMAP_9_BY_15, menuItems[i]);
+        renderBitmapString(10, 30 + (i * 20), GLUT_BITMAP_9_BY_15, menuItems[i]);
 
         if (i == selectedItem) {
-            glColor3f(1.0, 1.0, 0.0); // Fundo branco para o item selecionado
-            glRectf(8, 18 + (i * 50), 120, 38 + (i * 50)); // Desenha o retângulo atrás do text
+            glColor3f(1.0, 1.0, 1.0); // Fundo branco para o item selecionado
+            //void glRectf(GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2);
+            glRectf(8, 22 + (i * 20), 200, 45 + (i * 20)); // Desenha o retângulo atrás do text
         } else {
             glColor4f(0.2, 0.2, 0.8, 0.4); // Fundo com transparência para itens não selecionados
-            glRectf(8, 18 + (i * 50), 120, 38 + (i * 50)); // Desenha o retângulo atrás do texto
+            glRectf(8, 18 + (i * 20), 200, 40 + (i * 20)); // Desenha o retângulo atrás do text
         }
     }
 
@@ -320,7 +323,7 @@ void loadTextures() {
     }
 
     // Fundo
-    backgroundTexture = SOIL_load_OGL_texture("texturas/background.jpg", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_INVERT_Y);
+    backgroundTexture = SOIL_load_OGL_texture("texturas/teste.jpg", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_INVERT_Y);
     if (!backgroundTexture) {
         printf("Falha ao carregar a textura de fundo!\n");
         exit(1);
