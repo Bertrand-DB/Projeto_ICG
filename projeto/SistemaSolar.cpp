@@ -21,6 +21,8 @@
 #define NEPTUNE             8
 #define SATURNRING          9
 #define SKY                 10
+#define VEL_ORBITAL_PADRAO  0.3f
+#define VEL_ROTACAO_PADRAO  1.5f
 
 struct Planet {
     float distance;         // Distância do sol
@@ -32,15 +34,6 @@ struct Planet {
     float rotationAngle;    // Ângulo atual de rotação
     GLuint texture;         // ID da textura
 };
-
-struct Camera{
-    float x;
-    float y;
-    float z;
-    float angleH;
-    float angleV;
-};
-
 
 Planet astros[11];
 
@@ -58,13 +51,13 @@ std::string texturePath[11] = {
     "texturas/background.jpg"
 };
 
-float velOrbitalPadrao = 0.5f;
-float velRotacaoPadrao = 1.0f;
-
 // Posição espacial da câmera
 float cameraX = 2.97471;
 float cameraY = 10.2;
 float cameraZ = 38.8908;
+
+// Variável para controlar se a câmera está bloqueada no planeta
+int cameraLocked = 0; 
 
 // Posição do mouse
 int lastMouseX = 0;
@@ -83,7 +76,7 @@ float cameraLookX = 0.0f, cameraLookY = 0.0f, cameraLookZ = -1.0f;
 // Variável para pausar o movimento de translação
 bool translacao = true;
 bool rotacao = true;
-bool desenhaOrbita = true;
+bool desenhaOrbita = false;
 
 // Variáveis para controlar as teclas de movimento
 bool moveUp = false;
@@ -92,7 +85,6 @@ bool moveLeft = false;
 bool moveRight = false;
 bool moveFoward = false;
 bool moveBackward = false;
-
 
 void loadTextures() {
 
@@ -118,7 +110,7 @@ void initObjects(){
     astros[0].radius = 109*RAIO_ESCALA;
     astros[0].axialTilt = 0.0f;
     astros[0].orbitSpeed = 0.0f;
-    astros[0].rotationSpeed = 0.03703703704*velRotacaoPadrao;
+    astros[0].rotationSpeed = 0.03703703704*VEL_ROTACAO_PADRAO;
     astros[0].orbitAngle = 0.0f;
     astros[0].rotationAngle = 0.0f;
 
@@ -126,8 +118,8 @@ void initObjects(){
     astros[1].distance = 0.39*DISTANCIA_ESCALA+COMPENSACAO;
     astros[1].radius = 0.38*RAIO_ESCALA;
     astros[1].axialTilt = 0.01f;
-    astros[1].orbitSpeed = 4.1505681818*velOrbitalPadrao;
-    astros[1].rotationSpeed = 0.01705146131*velRotacaoPadrao;
+    astros[1].orbitSpeed = 4.1505681818*VEL_ORBITAL_PADRAO;
+    astros[1].rotationSpeed = 0.01705146131*VEL_ROTACAO_PADRAO;
     astros[1].orbitAngle = 0.0f;
     astros[1].rotationAngle = 0.0f;
 
@@ -135,8 +127,8 @@ void initObjects(){
     astros[2].distance = 0.72*DISTANCIA_ESCALA+COMPENSACAO;
     astros[2].radius = 0.95*RAIO_ESCALA;
     astros[2].axialTilt = 177.3f;
-    astros[2].orbitSpeed = 1.6233333333*velOrbitalPadrao;
-    astros[2].rotationSpeed = 0.004115056994*velRotacaoPadrao;
+    astros[2].orbitSpeed = 1.6233333333*VEL_ORBITAL_PADRAO;
+    astros[2].rotationSpeed = 0.004115056994*VEL_ROTACAO_PADRAO;
     astros[2].orbitAngle = 0.0f;
     astros[2].rotationAngle = 0.0f;
 
@@ -144,8 +136,8 @@ void initObjects(){
     astros[3].distance = DISTANCIA_ESCALA+COMPENSACAO;
     astros[3].radius = RAIO_ESCALA;
     astros[3].axialTilt = 23.26f;
-    astros[3].orbitSpeed = velOrbitalPadrao;
-    astros[3].rotationSpeed = velRotacaoPadrao;
+    astros[3].orbitSpeed = VEL_ORBITAL_PADRAO;
+    astros[3].rotationSpeed = VEL_ROTACAO_PADRAO;
     astros[3].orbitAngle = 0.0f;
     astros[3].rotationAngle = 0.0f;
 
@@ -153,8 +145,8 @@ void initObjects(){
     astros[4].distance = 1.52*DISTANCIA_ESCALA+COMPENSACAO;
     astros[4].radius = 0.53*RAIO_ESCALA;
     astros[4].axialTilt = 25.19f;
-    astros[4].orbitSpeed = 0.5316593886*velOrbitalPadrao;
-    astros[4].rotationSpeed = 0.9747072494*velRotacaoPadrao;
+    astros[4].orbitSpeed = 0.5316593886*VEL_ORBITAL_PADRAO;
+    astros[4].rotationSpeed = 0.9747072494*VEL_ROTACAO_PADRAO;
     astros[4].orbitAngle = 0.0f;
     astros[4].rotationAngle = 0.0f;
 
@@ -162,8 +154,8 @@ void initObjects(){
     astros[5].distance = 5.2*DISTANCIA_ESCALA+COMPENSACAO;
     astros[5].radius = 11.21*RAIO_ESCALA;
     astros[5].axialTilt = 3.13f;
-    astros[5].orbitSpeed = 0.0843144044*velOrbitalPadrao;
-    astros[5].rotationSpeed = 2.4182037*velRotacaoPadrao;
+    astros[5].orbitSpeed = 0.0843144044*VEL_ORBITAL_PADRAO;
+    astros[5].rotationSpeed = 2.4182037*VEL_ROTACAO_PADRAO;
     astros[5].orbitAngle = 0.0f;
     astros[5].rotationAngle = 0.0f;
 
@@ -171,8 +163,8 @@ void initObjects(){
     astros[6].distance = 9.58*DISTANCIA_ESCALA+COMPENSACAO;
     astros[6].radius = 9.45*RAIO_ESCALA;
     astros[6].axialTilt = 26.73f;
-    astros[6].orbitSpeed = 0.0339483223*velOrbitalPadrao;
-    astros[6].rotationSpeed = 2.345340536*velRotacaoPadrao;
+    astros[6].orbitSpeed = 0.0339483223*VEL_ORBITAL_PADRAO;
+    astros[6].rotationSpeed = 2.345340536*VEL_ROTACAO_PADRAO;
     astros[6].orbitAngle = 0.0f;
     astros[6].rotationAngle = 0.0f;
 
@@ -180,8 +172,8 @@ void initObjects(){
     astros[7].distance = 19.18*DISTANCIA_ESCALA+COMPENSACAO;
     astros[7].radius = 4.01*RAIO_ESCALA;
     astros[7].axialTilt = 97.77f;
-    astros[7].orbitSpeed = 0.0119125273*velOrbitalPadrao;
-    astros[7].rotationSpeed = 1.392111369*velRotacaoPadrao;
+    astros[7].orbitSpeed = 0.0119125273*VEL_ORBITAL_PADRAO;
+    astros[7].rotationSpeed = 1.392111369*VEL_ROTACAO_PADRAO;
     astros[7].orbitAngle = 0.0f;
     astros[7].rotationAngle = 0.0f;
 
@@ -189,8 +181,8 @@ void initObjects(){
     astros[8].distance = 30.07*DISTANCIA_ESCALA+COMPENSACAO;
     astros[8].radius = 3.88*RAIO_ESCALA;
     astros[8].axialTilt = 28.32f;
-    astros[8].orbitSpeed = 0.0060669734*velOrbitalPadrao;
-    astros[8].rotationSpeed = 1.489757914*velRotacaoPadrao;
+    astros[8].orbitSpeed = 0.0060669734*VEL_ORBITAL_PADRAO;
+    astros[8].rotationSpeed = 1.489757914*VEL_ROTACAO_PADRAO;
     astros[8].orbitAngle = 0.0f;
     astros[8].rotationAngle = 0.0f;
 
@@ -225,22 +217,23 @@ void init() {
     initObjects();  // Inicia os valores dos objetos
 }
 
-bool cameraLocked = false; // Variável para controlar se a câmera está bloqueada no planeta
-int focusedPlanet = 5; // Índice do planeta que está sendo focalizado
 
-// Função de atualização da câmera
-void updateCamera() {
-    // Calcula a posição do planeta que está sendo seguido
-    float planetZ = astros[focusedPlanet].distance * cos(astros[focusedPlanet].orbitAngle*0.0174533+1.4);
-    float planetX = astros[focusedPlanet].distance * sin(astros[focusedPlanet].orbitAngle*0.0174533+1.4);
-    //std::cout << "planeta: "<< planetX << "|" << planetZ << std::endl;
-    // Atualiza a posição da câmera para estar um pouco acima do planeta
-    cameraX = planetX;
-    cameraY = 0.0f;
-    cameraZ = planetZ; // Distância em relação ao planeta
-
-    cameraAngleH = -astros[focusedPlanet].orbitAngle*0.0174533+0.1;
+// Função de atualização da câmera travada em um planeta
+void follow(int id) {
+    // Espaçamento em graus do planeta
+    float k = 87.6;
+    if(id <= 4)  k = 88.3;
+    else if(id == 5 || id == 6) k = 82.6;
     
+    // Calcula a posição do planeta que está sendo seguido
+    //graus para radianos (*0.0174533) + espaçamento do planeta
+    cameraZ = astros[id].distance * cos((astros[id].orbitAngle+k)*0.0174533);
+    cameraX = astros[id].distance * sin((astros[id].orbitAngle+k)*0.0174533);
+    cameraY = 0.0f;
+
+    // Compensa a rotação de translação na angulação da camera
+    cameraAngleH = -astros[id].orbitAngle*0.0174533;
+    cameraAngleV = 0.0f;
 }
 
 // Função para atualizar a direção da câmera baseado em seus ângulos
@@ -415,7 +408,7 @@ void update(int value) {
         }
     }
 
-    if(cameraLocked) updateCamera();
+    if(cameraLocked) follow(cameraLocked);
 
     if (!cameraLocked){    // Atualiza a posição da câmera com base na direção de visualização
         if (moveFoward) {
@@ -499,25 +492,19 @@ void movementKeys(unsigned char key, int x, int y) {
 void handleKeys(unsigned char key, int x, int y){
     movementKeys(key,x,y);
 
+    //verifica se uma tecla numerica foi acionada e trava ou destrava a camera
+    if ('1' <= key && '8' >= key){
+        int planetId = key-'0';
+        if(cameraLocked == planetId) cameraLocked = 0;
+        else cameraLocked = planetId;
+    }
+    
     switch (key) {
         case 'p':  // Pausar/retomar o movimento de translação
             translacao = !translacao;
             break;
         case 'P':
             rotacao = !rotacao;
-            break;
-        case '6':
-            cameraLocked = !cameraLocked;
-
-            break;
-        case '1':   // Define a velocidade das órbitas
-            velOrbitalPadrao = 0.5f;
-            break;
-        case '2':   // Define a velocidade das órbitas
-            velOrbitalPadrao = 2.0f;
-            break;
-        case '3':   // Define a velocidade das órbitas
-            velOrbitalPadrao = 4.0f;
             break;
         case 'r':   // Reposiciona a câmera na posição inicial
             cameraX = 2.97471;
