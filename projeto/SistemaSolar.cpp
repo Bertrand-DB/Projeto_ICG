@@ -20,7 +20,8 @@
 #define URANUS              7
 #define NEPTUNE             8
 #define SATURNRING          9
-#define SKY                 10
+#define MOON                10
+#define SKY                 11
 #define VEL_ORBITAL_PADRAO  0.3f
 #define VEL_ROTACAO_PADRAO  1.5f
 
@@ -35,9 +36,9 @@ struct Planet {
     GLuint texture;         // ID da textura
 };
 
-Planet astros[11];
+Planet astros[12];
 
-std::string texturePath[11] = {
+std::string texturePath[12] = {
     "texturas/sun.jpg",
     "texturas/mercury.jpg",
     "texturas/venus.jpg",
@@ -48,6 +49,7 @@ std::string texturePath[11] = {
     "texturas/uranus.jpg",
     "texturas/neptune.jpg",
     "texturas/saturnRing.png",
+    "texturas/moon.jpg",
     "texturas/background.jpg"
 };
 
@@ -67,7 +69,7 @@ int lastMouseY = 0;
 float cameraAngleH = 0.62;
 float cameraAngleV = -0.3;
 
-float movementSpeed = 0.2f;  // Velocidade de movimento da câmera
+float movementSpeed = 0.1f;  // Velocidade de movimento da câmera
 float rotationSpeed = 0.02f;  // Velocidade de rotação da câmera
 
 // Vetor direção da câmera
@@ -88,7 +90,7 @@ bool moveBackward = false;
 
 void loadTextures() {
 
-    for (size_t i = 0; i <= 10; i++)
+    for (size_t i = 0; i <= 11; i++)
     {
         astros[i].texture = SOIL_load_OGL_texture(texturePath[i].c_str(), SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_INVERT_Y);
         if (!astros[i].texture) {
@@ -195,14 +197,23 @@ void initObjects(){
     astros[9].orbitAngle = 0.0f;
     astros[9].rotationAngle = 0.0f;
 
-    //Sky
-    astros[10].distance = 0.0f;
-    astros[10].radius = 200.0f;
+    //Moon
+    astros[10].distance = 0.00257*DISTANCIA_ESCALA;
+    astros[10].radius = 0.2721072437*RAIO_ESCALA;
     astros[10].axialTilt = 90.0f;
-    astros[10].orbitSpeed = 0.0f;
+    astros[10].orbitSpeed = 13.36873382*VEL_ORBITAL_PADRAO;
     astros[10].rotationSpeed = 0.0f;
     astros[10].orbitAngle = 0.0f;
     astros[10].rotationAngle = 0.0f;
+
+    //Sky
+    astros[11].distance = 0.0f;
+    astros[11].radius = 200.0f;
+    astros[11].axialTilt = 90.0f;
+    astros[11].orbitSpeed = 0.0f;
+    astros[11].rotationSpeed = 0.0f;
+    astros[11].orbitAngle = 0.0f;
+    astros[11].rotationAngle = 0.0f;
 }
 
 void init() {
@@ -216,7 +227,6 @@ void init() {
     loadTextures(); // Carregar as texturas
     initObjects();  // Inicia os valores dos objetos
 }
-
 
 // Função de atualização da câmera travada em um planeta
 void follow(int id) {
@@ -273,7 +283,7 @@ void drawBackground() {
     // Desenhar uma esfera grande ao redor da cena para o background
     GLUquadric* quadric = gluNewQuadric();
     gluQuadricTexture(quadric, GL_TRUE);
-    gluSphere(quadric, 200.0f, 50, 50);  // Tamanho grande da esfera para cobrir o universo
+    gluSphere(quadric, astros[SKY].radius, 50, 50);  // Tamanho grande da esfera para cobrir o universo
     gluDeleteQuadric(quadric);
 
     glEnable(GL_LIGHTING);  // Reabilitar a iluminação
@@ -326,6 +336,34 @@ void drawSaturnRing(){
     // Desativar blend e textura
     glDisable(GL_BLEND);
     glDisable(GL_TEXTURE_2D);
+    glPopMatrix();
+}
+
+void drawMoon(){
+    glPushMatrix();
+
+    glRotatef(astros[EARTH].orbitAngle, 0.0f, 1.0f, 0.0f);  // Rotação de translação da Terra ao redor do Sol
+    glTranslatef(astros[EARTH].distance, 0.0f, 0.0f);       // Translação da Terra para sua órbita ao redor do Sol
+    glRotatef(astros[MOON].orbitAngle, 0.0f, 1.0f, 0.0f);   // Rotação de translação da lua pela terra
+    glTranslatef((astros[MOON].radius+astros[EARTH].radius+astros[MOON].distance)*DISTANCIA_ESCALA, 0.0f, 0.0f);        // Posiciona a lua na órbita da terra
+    
+    glRotatef(-90.0f, 1.0f, 0.0f, 0.0f);                      // ângulo de correção de textura
+    
+    if (astros[MOON].texture) {
+        glEnable(GL_TEXTURE_2D);
+        glBindTexture(GL_TEXTURE_2D, astros[MOON].texture); // Associar a textura
+        glColor3f(1.0f, 1.0f, 1.0f);                        // Branco para permitir a visualização da textura
+    } else {
+        glColor3f(1.0f, 0.0f, 0.0f);
+        glDisable(GL_TEXTURE_2D);                           // Desabilitar texturas se não houver
+    }
+    
+    // Desenhar a esfera com textura
+    GLUquadric* quadric = gluNewQuadric();
+    gluQuadricTexture(quadric, GL_TRUE);
+    gluSphere(quadric, astros[MOON].radius, 50, 50);
+    gluDeleteQuadric(quadric);
+
     glPopMatrix();
 }
 
@@ -386,6 +424,8 @@ void display() {
         drawPlanet(astros[i].distance, astros[i].radius, astros[i].orbitAngle, astros[i].texture, astros[i].axialTilt, astros[i].rotationAngle);
     }
 
+    drawMoon();
+
     //desenha anel de saturno
     drawSaturnRing();
 
@@ -396,7 +436,7 @@ void update(int value) {
     // Cada planeta se move a uma velocidade proporcional em relação a terra
     // Atualiza os ângulos dos planetas em órbita em relacao ao sol somente se não estiver pausado
     if (translacao){
-        for (size_t i = 1; i <= 9; i++){
+        for (size_t i = 1; i <= 10; i++){
            astros[i].orbitAngle += astros[i].orbitSpeed;
         }
     }
