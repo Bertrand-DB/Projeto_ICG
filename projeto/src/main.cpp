@@ -47,7 +47,7 @@ bool showInfo = true;
 int cameraLocked = 0;
 
 Astro* target;
-GLuint& target_info_tex = controle_menu_tex;
+GLuint* target_info_tex = &controle_menu_tex;
 float espacamentoAngular = 88.3;
 
 // Variáveis para controlar as teclas de movimento
@@ -123,7 +123,7 @@ void init() {
     loadTextures();  // Carregar as texturas
 }
 
-void renderInfo(GLuint textureId, float x, float y, float width, float height) {
+void renderInfo(GLuint* textureId, float x, float y, float width, float height) {
     // Salvar a matriz de projeção e a matriz de visualização atuais
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
@@ -148,7 +148,7 @@ void renderInfo(GLuint textureId, float x, float y, float width, float height) {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // Associar a textura
-    glBindTexture(GL_TEXTURE_2D, textureId);
+    glBindTexture(GL_TEXTURE_2D, *textureId);
 
     // Renderizar o quad com a textura aplicada
     glBegin(GL_QUADS);
@@ -345,8 +345,8 @@ void display() {
     // Limpar os buffers de cor e profundidade
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    if (showControlersInfo == true) {
-        renderInfo(controle_menu_tex, 500, 300, 760, 517);
+    if (showControlersInfo == true && !cameraLocked) {
+        renderInfo(&controle_menu_tex, 500, 300, 760, 517);
     } else {
         renderMenu();
     }
@@ -387,7 +387,7 @@ void display() {
     drawSaturnRing();
     drawMoon();
 
-    if(cameraLocked && showInfo){
+    if(cameraLocked && showInfo && !showControlersInfo){
         renderInfo(target_info_tex, 100, 160, 650, 700);
     }
 
@@ -508,6 +508,7 @@ void handleKeys(unsigned char key, int x, int y){
 
     if ('1' <= key && '8' >= key){
         int num = key-'0';
+        showControlersInfo = false;
         if(cameraLocked == num) cameraLocked = 0;
         else cameraLocked = num;
     }
@@ -516,42 +517,42 @@ void handleKeys(unsigned char key, int x, int y){
     switch (key) {
         case '1':
             target = &mercury;
-            target_info_tex = mercury_info_tex;
+            target_info_tex = &mercury_info_tex;
             espacamentoAngular = 88.3;
             break;
         case '2':
             target = &venus;
-            target_info_tex = venus_info_tex;
+            target_info_tex = &venus_info_tex;
             espacamentoAngular = 88.3;
             break;
         case '3':
             target = &earth;
-            target_info_tex = earth_info_tex;
+            target_info_tex = &earth_info_tex;
             espacamentoAngular = 88.3;
             break;
         case '4':
             target = &mars;
-            target_info_tex = mars_info_tex;
+            target_info_tex = &mars_info_tex;
             espacamentoAngular = 88.3;
             break;
         case '5':
             target = &jupiter;
-            target_info_tex = jupiter_info_tex;
+            target_info_tex = &jupiter_info_tex;
             espacamentoAngular = 82.6;
             break;
         case '6':
             target = &saturn;
-            target_info_tex = saturn_info_tex;
+            target_info_tex = &saturn_info_tex;
             espacamentoAngular = 82.6;
             break;
         case '7':
             target = &uranus;
-            target_info_tex = uranus_info_tex;
+            target_info_tex = &uranus_info_tex;
             espacamentoAngular = 87.4;
             break;
         case '8':
             target = &neptune;
-            target_info_tex = neptune_info_tex;
+            target_info_tex = &neptune_info_tex;
             espacamentoAngular = 87.8;
             break;
         case 'p':  // Pausar/retomar o movimento com a tecla P
@@ -581,6 +582,7 @@ void handleKeys(unsigned char key, int x, int y){
                 exit(0);
             } else if (selectedItem == 1) {
                 showControlersInfo = true;
+                cameraLocked = false;
             }
             break;
     }
