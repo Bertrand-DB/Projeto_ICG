@@ -23,7 +23,9 @@
 #define MOON                10
 #define SKY                 11
 #define VEL_ORBITAL_PADRAO  0.3f
-#define VEL_ROTACAO_PADRAO  1.5f
+#define VEL_ROTACAO_PADRAO  2.0f
+// Para uma escala real de tempo/velocidade, a VEL_ROTACAO_PADRAO deve ser 365.25*VEL_ORBITAL_PADRAO
+// Se VEL_ROTACAO_PADRAO = 2.0 -> VEL_ORBITAL_PADRAO = 0.00547570157
 
 struct Planet {
     float distance;         // Distância do sol
@@ -189,12 +191,12 @@ void initObjects(){
     astros[8].rotationAngle = 0.0f;
 
     //Saturn ring
-    astros[9].distance = astros[6].distance;
-    astros[9].radius = astros[6].radius;
+    astros[9].distance = astros[SATURN].distance;
+    astros[9].radius = astros[SATURN].radius;
     astros[9].axialTilt = 26.73f;
-    astros[9].orbitSpeed = astros[6].orbitSpeed;
+    astros[9].orbitSpeed = astros[SATURN].orbitSpeed;
     astros[9].rotationSpeed = 0.0f;
-    astros[9].orbitAngle = 0.0f;
+    astros[9].orbitAngle = astros[SATURN].orbitAngle;
     astros[9].rotationAngle = 0.0f;
 
     //Moon
@@ -343,8 +345,12 @@ void drawMoon(){
     glPushMatrix();
 
     glRotatef(astros[EARTH].orbitAngle, 0.0f, 1.0f, 0.0f);  // Rotação de translação da Terra ao redor do Sol
-    glTranslatef(astros[EARTH].distance, 0.0f, 0.0f);       // Translação da Terra para sua órbita ao redor do Sol
-    glRotatef(astros[MOON].orbitAngle, 0.0f, 1.0f, 0.0f);   // Rotação de translação da lua pela terra
+    glTranslatef(astros[EARTH].distance, 0.0f, 0.0f);       // Translação da Terra para sua órbita
+    glRotatef(-astros[EARTH].orbitAngle, 0.0f, 1.0f, 0.0f); // Compensação da Rotação de translação da Terra
+    glRotatef(astros[MOON].orbitAngle, 0.0f, 1.0f, 0.0f);   // Rotação de translação da lua ao redor da terra
+
+    float anguloOrbitalZ = 5.2*sin(astros[MOON].orbitAngle*(M_PI/180));
+    glRotatef(anguloOrbitalZ, 0.0f, 0.0f, 1.0f);   // Rotação de translação da lua pela terra
     glTranslatef((astros[MOON].radius+astros[EARTH].radius+astros[MOON].distance)*DISTANCIA_ESCALA, 0.0f, 0.0f);        // Posiciona a lua na órbita da terra
     
     glRotatef(-90.0f, 1.0f, 0.0f, 0.0f);                      // ângulo de correção de textura
