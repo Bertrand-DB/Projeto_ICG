@@ -3,8 +3,8 @@
 Astro::Astro() {}
 Astro::~Astro() {}
 
-Astro::Astro(float dist, float r, float incl, float angRot, float angTrans, GLuint tex)
-    : distancia(dist), raio(r), inclinacaoEixo(incl), anguloRotacao(angRot), anguloTranslacao(angTrans), textura(tex) {}
+Astro::Astro(float dist, float r, float incl, float velRot, float velTrans, float angRot, float angTrans, GLuint tex)
+    : distancia(dist), raio(r), inclinacaoEixo(incl), velRotacao(velRot), velTranslacao(velTrans), anguloRotacao(angRot), anguloTranslacao(angTrans), textura(tex) {}
 
 float Astro::get_distancia()
 {
@@ -51,6 +51,16 @@ void Astro::set_inclinacaoEixo(float inclinacaoEixo)
     this->inclinacaoEixo = inclinacaoEixo;
 }
 
+void Astro::set_velRotacao(float velRotacao)
+{
+    this->velRotacao = velRotacao;
+}
+
+void Astro::set_velTranslacao(float velTranslacao)
+{
+    this->velTranslacao = velTranslacao;
+}
+
 void Astro::set_anguloRotacao(float anguloRotacao)
 {
     this->anguloRotacao = anguloRotacao;
@@ -71,6 +81,7 @@ void Astro::draw() {
 
     glRotatef(this->anguloTranslacao, 0.0f, 1.0f, 0.0f);
     glTranslatef(this->distancia, 0.0f, 0.0f);
+    glRotatef(-this->anguloTranslacao, 0.0f, 1.0f, 0.0f);
     glRotatef(this->inclinacaoEixo - 90, 1.0f, 0.0f, 0.0f);
     glRotatef(this->anguloRotacao, 0.0f, 0.0f, 1.0f);
 
@@ -90,12 +101,12 @@ void Astro::draw() {
     glPopMatrix();
 }
 
-void Astro::update_anguloRotacao(float angulo)
+void Astro::update_anguloRotacao()
 {
-    this->anguloRotacao += angulo;
+    this->anguloRotacao += velRotacao;
 }
 
-void Astro::update_anguloTranslacao(float angulo)
+void Astro::update_anguloTranslacao()
 {
-    this->anguloTranslacao += angulo;
+    this->anguloTranslacao += velTranslacao;
 }   

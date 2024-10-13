@@ -36,6 +36,16 @@ void Camera::moveRight()
     this->posZ += this->lookX * this->movementSpeed;
 }
 
+void Camera::moveUp()
+{
+    this->posY += this->movementSpeed;
+}
+
+void Camera::moveDown()
+{
+    this->posY -= this->movementSpeed;
+}
+
 void Camera::rotateUp()
 {
     this->lookY += this->movementSpeed;
@@ -159,8 +169,10 @@ void Camera::set_angleH(float angleH)
 }
 
 void Camera::set_angleV(float angleV)
-{
-    this->angleV = angleV;
+{   
+    if (angleV < -1.5) this->angleV = -1.5;     //garantir os limites de ângulação vertical
+    else if (angleV > 1.5)this->angleV = 1.5;
+    else this->angleV = angleV;
 }
 
 void Camera::set_movementSpeed(float movementSpeed)

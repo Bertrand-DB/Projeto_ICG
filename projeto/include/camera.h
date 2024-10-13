@@ -24,6 +24,8 @@ public:
     void moveBackward();
     void moveLeft();
     void moveRight();
+    void moveUp();
+    void moveDown();
     void rotateUp();
     void rotateDown();
     void updateLookDirection();

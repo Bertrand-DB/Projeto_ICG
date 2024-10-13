@@ -14,6 +14,9 @@
 #define DISTANCIA_PADRAO    3.0f       // Distância padrão para os astros em relação ao Sol
 #define COMPENSACAO         20.0f      // Compensação para ajustar a posição dos astros
 #define RAIO_PADRAO         0.1f       // Raio padrão para os astros
+#define SENSIBILIDADE       0.002f
+#define VEL_ORBITAL_PADRAO  0.5f
+#define VEL_ROTACAO_PADRAO  1.0f
 
 // Ângulos de inclinação do eixo de rotação
 #define INCLINACAO_EIXO_MERCURIO    0.01f
@@ -27,28 +30,26 @@
 
 // Instanciando os astros com suas respectivas propriedades
 // Astro(distancia, raio, inclinacaoEixo, anguloRotacao, anguloTranslacao, textura)
-Astro sun(0.0f, 109*RAIO_PADRAO, 0.0f, 0.00f, 0.00f, 0);
-Astro mercury(0.39 * DISTANCIA_PADRAO + COMPENSACAO, 0.38 * RAIO_PADRAO, INCLINACAO_EIXO_MERCURIO, 0.0f, 0.0f, 0);
-Astro venus(0.72 * DISTANCIA_PADRAO + COMPENSACAO, 0.95 * RAIO_PADRAO, INCLINACAO_EIXO_VENUS, 0.0f, 0.0f, 0);
-Astro earth(DISTANCIA_PADRAO + COMPENSACAO, RAIO_PADRAO, INCLINACAO_EIXO_TERRA, 0.0f, 0.0f, 0);
-Astro mars(1.52*DISTANCIA_PADRAO+109*RAIO_PADRAO, 0.53*RAIO_PADRAO, INCLINACAO_EIXO_MARTE, 0.0f, 0.0f, 0);
-Astro jupiter(5.2*DISTANCIA_PADRAO+109*RAIO_PADRAO, 11.21*RAIO_PADRAO, INCLINACAO_EIXO_JUPITER, 0.0f, 0.0f, 0);
-Astro saturn(9.58*DISTANCIA_PADRAO+109*RAIO_PADRAO, 9.45*RAIO_PADRAO, INCLINACAO_EIXO_SATURNO, 0.0f, 0.0f, 0);
-Astro uranus(19.18*DISTANCIA_PADRAO+109*RAIO_PADRAO, 4.01*RAIO_PADRAO, INCLINACAO_EIXO_URANO, 0.0f, 0.0f, 0);
-Astro neptune(0.07*DISTANCIA_PADRAO+109*RAIO_PADRAO, 3.88*RAIO_PADRAO, INCLINACAO_EIXO_NETUNO, 0.0f, 0.0f, 0);
+Astro sun(0.0f, 109*RAIO_PADRAO, 0.03703703704*VEL_ROTACAO_PADRAO, 0.0f, 0.0f, 0.00f, 0.00f, 0);
+Astro mercury(0.39*DISTANCIA_PADRAO+COMPENSACAO, 0.38*RAIO_PADRAO, INCLINACAO_EIXO_MERCURIO, 0.01705146131*VEL_ROTACAO_PADRAO, 4.1505681818*VEL_ORBITAL_PADRAO, 0.0f, 0.0f, 0);
+Astro venus(0.72 * DISTANCIA_PADRAO + COMPENSACAO, 0.95 * RAIO_PADRAO, INCLINACAO_EIXO_VENUS, 0.004115056994*VEL_ROTACAO_PADRAO, 1.6233333333*VEL_ORBITAL_PADRAO, 0.0f, 0.0f, 0);
+Astro earth(DISTANCIA_PADRAO + COMPENSACAO, RAIO_PADRAO, INCLINACAO_EIXO_TERRA, VEL_ROTACAO_PADRAO, VEL_ORBITAL_PADRAO, 0.0f, 0.0f, 0);
+Astro mars(1.52*DISTANCIA_PADRAO+COMPENSACAO, 0.53*RAIO_PADRAO, INCLINACAO_EIXO_MARTE, 0.9747072494*VEL_ROTACAO_PADRAO, 0.5316593886*VEL_ORBITAL_PADRAO, 0.0f, 0.0f, 0);
+Astro jupiter(5.2*DISTANCIA_PADRAO+COMPENSACAO, 11.21*RAIO_PADRAO, INCLINACAO_EIXO_JUPITER, 2.4182037*VEL_ROTACAO_PADRAO, 0.0843144044*VEL_ORBITAL_PADRAO, 0.0f, 0.0f, 0);
+Astro saturn(9.58*DISTANCIA_PADRAO+COMPENSACAO, 9.45*RAIO_PADRAO, INCLINACAO_EIXO_SATURNO, 2.345340536*VEL_ROTACAO_PADRAO, 0.0339483223*VEL_ORBITAL_PADRAO, 0.0f, 0.0f, 0);
+Astro uranus(19.18*DISTANCIA_PADRAO+COMPENSACAO, 4.01*RAIO_PADRAO, INCLINACAO_EIXO_URANO, 1.392111369*VEL_ROTACAO_PADRAO, 0.0119125273*VEL_ORBITAL_PADRAO, 0.0f, 0.0f, 0);
+Astro neptune(30.07*DISTANCIA_PADRAO+COMPENSACAO, 3.88*RAIO_PADRAO, INCLINACAO_EIXO_NETUNO, 1.489757914*VEL_ROTACAO_PADRAO, 0.0060669734*VEL_ORBITAL_PADRAO, 0.0f, 0.0f, 0);
+Astro moon(0.00257*DISTANCIA_PADRAO, 0.2721072437*RAIO_PADRAO, 0.0f, 0.0f, 13.36873382*VEL_ROTACAO_PADRAO, 0.0f, 0.0f, 0);
 
 GLuint backgroundTexture;
 GLuint saturnRingTexture;
-
-float velOrbitalPadrao = 0.5f;  // Velocidade orbital padrão
-float velRotacaoPadrao = 1.0f;   // Velocidade de rotação padrão
 
 Camera camera(2.97471f, 46.4001f, 38.8908f, 0.0f, 0.0f, -1.0f, 0.58, -0.8, 0.2f, 0.02f);
 
 // Variável para pausar o movimento de translação
 bool translacao = true;
 bool rotacao = true;
-bool desenhaOrbita = true;
+bool desenhaOrbita = false;
 
 // Variáveis para controlar as teclas de movimento
 bool moveUp = false;
@@ -57,10 +58,8 @@ bool moveLeft = false;
 bool moveRight = false;
 bool moveFoward = false;
 bool moveBackward = false;
-bool lookUp = false;
-bool lookDown = false;
-bool lookLeft = false;
-bool lookRight = false;
+int lastMouseX;
+int lastMouseY;
 
 // Função para carregar todas as texturas dos astros
 void loadTextures() {
@@ -76,6 +75,7 @@ void loadTextures() {
     uranus.set_textura(loadTexture("assets/uranus.jpg"));
     neptune.set_textura(loadTexture("assets/neptune.jpg"));
     backgroundTexture = loadTexture("assets/background.jpg");
+    moon.set_textura(loadTexture("assets/moon.jpg"));
 
     // Configura as texturas para cada astro
     configurarTextura(sun.get_textura());
@@ -89,6 +89,7 @@ void loadTextures() {
     configurarTextura(uranus.get_textura());
     configurarTextura(neptune.get_textura());
     configurarTextura(backgroundTexture);
+    configurarTextura(moon.get_textura());
 }
 
 // Função para inicializar as configurações OpenGL
@@ -204,7 +205,8 @@ void drawPlanet(Astro& astro) {
     // Rotação do planeta em torno do sol (translação)
     glRotatef(astro.get_anguloTranslacao(), 0.0f, 1.0f, 0.0f); 
     glTranslatef(astro.get_distancia(), 0.0f, 0.0f); // Posição do planeta em relação ao Sol
-    
+    glRotatef(-astro.get_anguloTranslacao(), 0.0f, 1.0f, 0.0f); 
+
     // Inclinação do eixo de rotação (em torno do eixo X)
     glRotatef(astro.get_inclinacaoEixo() - 90, 1.0f, 0.0f, 0.0f);
 
@@ -283,56 +285,64 @@ void update(int value) {
     // Atualiza os ângulos de translação dos planetas em relação ao Sol
     // Cada planeta se move a uma velocidade proporcional à Terra
     if (translacao) { // Verifica se a translação está ativada
-        mercury.update_anguloTranslacao(4.1505681818 * velOrbitalPadrao); // Atualiza o ângulo de translação do Mercúrio
-        venus.update_anguloTranslacao(1.6233333333 * velOrbitalPadrao); // Atualiza o ângulo de translação de Vênus
-        earth.update_anguloTranslacao(velOrbitalPadrao); // Atualiza o ângulo de translação da Terra
-        mars.update_anguloTranslacao(0.5316593886 * velOrbitalPadrao); // Atualiza o ângulo de translação de Marte
-        jupiter.update_anguloTranslacao(0.0843144044 * velOrbitalPadrao); // Atualiza o ângulo de translação de Júpiter
-        saturn.update_anguloTranslacao(0.0339483223 * velOrbitalPadrao); // Atualiza o ângulo de translação de Saturno
-        uranus.update_anguloTranslacao(0.0119125273 * velOrbitalPadrao); // Atualiza o ângulo de translação de Urano
-        neptune.update_anguloTranslacao(0.0060669734 * velOrbitalPadrao); // Atualiza o ângulo de translação de Netuno
+        mercury.update_anguloTranslacao();  // Atualiza o ângulo de translação do Mercúrio
+        venus.update_anguloTranslacao();    // Atualiza o ângulo de translação de Vênus
+        earth.update_anguloTranslacao();    // Atualiza o ângulo de translação da Terra
+        mars.update_anguloTranslacao();     // Atualiza o ângulo de translação de Marte
+        jupiter.update_anguloTranslacao();  // Atualiza o ângulo de translação de Júpiter
+        saturn.update_anguloTranslacao();   // Atualiza o ângulo de translação de Saturno
+        uranus.update_anguloTranslacao();   // Atualiza o ângulo de translação de Urano
+        neptune.update_anguloTranslacao();  // Atualiza o ângulo de translação de Netuno
+        moon.update_anguloTranslacao();
     }
 
     // Atualiza os ângulos de rotação dos planetas em torno do seu próprio eixo
     if (rotacao) { // Verifica se a rotação está ativada
-        sun.update_anguloRotacao(0.03703703704 * velRotacaoPadrao); // Atualiza o ângulo de rotação do Sol
-        mercury.update_anguloRotacao(0.01705146131 * velRotacaoPadrao); // Atualiza o ângulo de rotação do Mercúrio
-        venus.update_anguloRotacao(0.004115056994 * velRotacaoPadrao); // Atualiza o ângulo de rotação de Vênus
-        earth.update_anguloRotacao(velRotacaoPadrao); // Atualiza o ângulo de rotação da Terra
-        mars.update_anguloRotacao(0.9747072494 * velRotacaoPadrao); // Atualiza o ângulo de rotação de Marte
-        jupiter.update_anguloRotacao(2.4182037 * velRotacaoPadrao); // Atualiza o ângulo de rotação de Júpiter
-        saturn.update_anguloRotacao(2.345340536 * velRotacaoPadrao); // Atualiza o ângulo de rotação de Saturno
-        uranus.update_anguloRotacao(1.392111369 * velRotacaoPadrao); // Atualiza o ângulo de rotação de Urano
-        neptune.update_anguloRotacao(1.489757914 * velRotacaoPadrao); // Atualiza o ângulo de rotação de Netuno
+        sun.update_anguloRotacao();     // Atualiza o ângulo de rotação do Sol
+        mercury.update_anguloRotacao(); // Atualiza o ângulo de rotação do Mercúrio
+        venus.update_anguloRotacao();   // Atualiza o ângulo de rotação de Vênus
+        earth.update_anguloRotacao();   // Atualiza o ângulo de rotação da Terra
+        mars.update_anguloRotacao();    // Atualiza o ângulo de rotação de Marte
+        jupiter.update_anguloRotacao(); // Atualiza o ângulo de rotação de Júpiter
+        saturn.update_anguloRotacao();  // Atualiza o ângulo de rotação de Saturno
+        uranus.update_anguloRotacao();  // Atualiza o ângulo de rotação de Urano
+        neptune.update_anguloRotacao(); // Atualiza o ângulo de rotação de Netuno
     }
-    
-    // Atualiza a direção de visualização da câmera baseado na entrada do usuário
-    if (lookUp && camera.get_angleV() < 1.5f) camera.update_lookUp(); // Inclinar a câmera para cima
-    if (lookDown && camera.get_angleV() > -1.5f) camera.update_lookDown(); // Inclinar a câmera para baixo
-    if (lookLeft) camera.update_lookLeft(); // Girar a câmera para a esquerda
-    if (lookRight) camera.update_lookRight(); // Girar a câmera para a direita
 
     // Atualiza a posição da câmera com base na direção de visualização
-    if (moveFoward) { // Se a tecla de mover para frente estiver pressionada
-       camera.moveForward();
-    }
-    if (moveBackward) { // Se a tecla de mover para trás estiver pressionada
-       camera.moveBackward();
-    }
-    if (moveLeft) { // Se a tecla de mover para a esquerda estiver pressionada
-       camera.moveLeft();
-    }
-    if (moveRight) { // Se a tecla de mover para a direita estiver pressionada
-       camera.moveRight();
-    }
-
-    if (moveUp) camera.rotateUp(); // Mover a câmera para cima
-    if (moveDown) camera.rotateDown(); // Mover a câmera para baixo
+    if (moveFoward) camera.moveForward();       // Se a tecla de mover para frente estiver pressionada
+    if (moveBackward) camera.moveBackward();    // Se a tecla de mover para trás estiver pressionada
+    if (moveLeft) camera.moveLeft();            // Se a tecla de mover para a esquerda estiver pressionada
+    if (moveRight) camera.moveRight();          // Se a tecla de mover para a direita estiver pressionada
+    if (moveUp) camera.moveUp();              // Mover a câmera para cima
+    if (moveDown) camera.moveDown();          // Mover a câmera para baixo
     
     // Atualiza a direção da câmera com base nos ângulos de visão
     camera.updateLookDirection();
     glutPostRedisplay(); // Solicitar uma nova exibição
     glutTimerFunc(16, update, 0); // Chamar a função de atualização novamente após 16 ms
+}
+
+// Função para capturar o movimento do mouse
+void mouseMotion(int x, int y) {
+    int deltaX = x - lastMouseX;
+    int deltaY = y - lastMouseY;
+
+    // Atualizar ângulos da câmera com base no movimento do mouse
+    camera.set_angleH(camera.get_angleH() + deltaX*SENSIBILIDADE);
+    camera.set_angleV(camera.get_angleV() - deltaY*SENSIBILIDADE);
+
+    lastMouseX = x;
+    lastMouseY = y;
+}
+
+// Função para capturar o botão do mouse (opcional)
+void mouseButton(int button, int state, int x, int y) {
+    if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
+        // Armazenar a posição do mouse quando o botão é pressionado
+        lastMouseX = x;
+        lastMouseY = y;
+    }
 }
 
 void specialKeys(int key, int x, int y) {
@@ -373,18 +383,6 @@ void movementKeys(unsigned char key, int x, int y) {
         case 'c':   // Mover a câmera para baixo (eixo y)
             moveDown = !moveDown; // Alterna o estado do movimento para baixo
             break;
-        case 'h':  // Rotacionar para a esquerda (horizontalmente)
-            lookLeft = !lookLeft; // Alterna o estado da rotação para a esquerda
-            break;
-        case 'k':  // Rotacionar para a direita (horizontalmente)
-            lookRight = !lookRight; // Alterna o estado da rotação para a direita
-            break;
-        case 'u':  // Rotacionar para cima (verticalmente)
-            lookUp = !lookUp; // Alterna o estado da rotação para cima
-            break;
-        case 'j':  // Rotacionar para baixo (verticalmente)
-            lookDown = !lookDown; // Alterna o estado da rotação para baixo
-            break;
     }
     glutPostRedisplay(); // Solicita uma nova exibição após a mudança de estado
 }
@@ -398,21 +396,15 @@ void handleKeys(unsigned char key, int x, int y){
         case 'p':  // Pausar/retomar o movimento com a tecla P
             translacao = !translacao; // Alterna o estado da translação (pausar ou retomar)
             break;
-        case '1':   // Define a velocidade das órbitas
-            velOrbitalPadrao = 0.5f; // Define a velocidade orbital padrão para 0.5
-            break;
-        case '2':   // Define a velocidade das órbitas
-            velOrbitalPadrao = 2.0f; // Define a velocidade orbital padrão para 2.0
-            break;
-        case '3':   // Define a velocidade das órbitas
-            velOrbitalPadrao = 4.0f; // Define a velocidade orbital padrão para 4.0
+        case 'P':
+            rotacao = !rotacao;
             break;
         case 'r':   // Reposiciona a câmera na posição inicial
             camera.set_posX(2.97471); // Define a posição inicial da câmera no eixo X
-            camera.set_posY(46.4001); // Define a posição inicial da câmera no eixo Y
+            camera.set_posY(10.2); // Define a posição inicial da câmera no eixo Y
             camera.set_posZ(38.8908); // Define a posição inicial da câmera no eixo Z
-            camera.set_angleH(0.58); // Define o ângulo horizontal inicial da câmera
-            camera.set_angleV(-0.8); // Define o ângulo vertical inicial da câmera
+            camera.set_angleH(0.62); // Define o ângulo horizontal inicial da câmera
+            camera.set_angleV(-0.3); // Define o ângulo vertical inicial da câmera
             break;
         case 'l': // Alternar a visualização da órbita
             desenhaOrbita = !desenhaOrbita; // Alterna o estado da visualização da órbita
@@ -453,6 +445,8 @@ int main(int argc, char** argv) {
     glutKeyboardFunc(handleKeys); // Captura teclas pressionadas
     glutKeyboardUpFunc(movementKeys); // Captura quando as teclas são liberadas
     glutSpecialFunc(specialKeys);       //Captura as teclas especias como as setinhas do teclado
+    glutMouseFunc(mouseButton);
+    glutMotionFunc(mouseMotion);
     glutTimerFunc(25, update, 0); // Configura o temporizador para atualizações regulares
 
     glutMainLoop(); // Inicia o loop principal do GLUT
