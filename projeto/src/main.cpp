@@ -15,41 +15,37 @@
 #define COMPENSACAO         20.0f      // Compensação para ajustar a posição dos astros
 #define RAIO_PADRAO         0.1f       // Raio padrão para os astros
 #define SENSIBILIDADE       0.002f
-#define VEL_ORBITAL_PADRAO  0.5f
-#define VEL_ROTACAO_PADRAO  1.0f
-
-// Ângulos de inclinação do eixo de rotação
-#define INCLINACAO_EIXO_MERCURIO    0.01f
-#define INCLINACAO_EIXO_VENUS       177.3f
-#define INCLINACAO_EIXO_TERRA       23.26f
-#define INCLINACAO_EIXO_MARTE       25.19f
-#define INCLINACAO_EIXO_JUPITER     3.13f
-#define INCLINACAO_EIXO_SATURNO     26.73f
-#define INCLINACAO_EIXO_URANO       97.77f
-#define INCLINACAO_EIXO_NETUNO      28.32f
+#define VEL_ORBITAL_PADRAO  0.3f
+#define VEL_ROTACAO_PADRAO  2.0f
+// Para uma escala real de tempo/velocidade, a VEL_ROTACAO_PADRAO deve ser 365.25*VEL_ORBITAL_PADRAO
+// Se VEL_ROTACAO_PADRAO = 2.0 -> VEL_ORBITAL_PADRAO = 0.00547570157
 
 // Instanciando os astros com suas respectivas propriedades
 // Astro(distancia, raio, inclinacaoEixo, anguloRotacao, anguloTranslacao, textura)
 Astro sun(0.0f, 109*RAIO_PADRAO, 0.03703703704*VEL_ROTACAO_PADRAO, 0.0f, 0.0f, 0.00f, 0.00f, 0);
-Astro mercury(0.39*DISTANCIA_PADRAO+COMPENSACAO, 0.38*RAIO_PADRAO, INCLINACAO_EIXO_MERCURIO, 0.01705146131*VEL_ROTACAO_PADRAO, 4.1505681818*VEL_ORBITAL_PADRAO, 0.0f, 0.0f, 0);
-Astro venus(0.72 * DISTANCIA_PADRAO + COMPENSACAO, 0.95 * RAIO_PADRAO, INCLINACAO_EIXO_VENUS, 0.004115056994*VEL_ROTACAO_PADRAO, 1.6233333333*VEL_ORBITAL_PADRAO, 0.0f, 0.0f, 0);
-Astro earth(DISTANCIA_PADRAO + COMPENSACAO, RAIO_PADRAO, INCLINACAO_EIXO_TERRA, VEL_ROTACAO_PADRAO, VEL_ORBITAL_PADRAO, 0.0f, 0.0f, 0);
-Astro mars(1.52*DISTANCIA_PADRAO+COMPENSACAO, 0.53*RAIO_PADRAO, INCLINACAO_EIXO_MARTE, 0.9747072494*VEL_ROTACAO_PADRAO, 0.5316593886*VEL_ORBITAL_PADRAO, 0.0f, 0.0f, 0);
-Astro jupiter(5.2*DISTANCIA_PADRAO+COMPENSACAO, 11.21*RAIO_PADRAO, INCLINACAO_EIXO_JUPITER, 2.4182037*VEL_ROTACAO_PADRAO, 0.0843144044*VEL_ORBITAL_PADRAO, 0.0f, 0.0f, 0);
-Astro saturn(9.58*DISTANCIA_PADRAO+COMPENSACAO, 9.45*RAIO_PADRAO, INCLINACAO_EIXO_SATURNO, 2.345340536*VEL_ROTACAO_PADRAO, 0.0339483223*VEL_ORBITAL_PADRAO, 0.0f, 0.0f, 0);
-Astro uranus(19.18*DISTANCIA_PADRAO+COMPENSACAO, 4.01*RAIO_PADRAO, INCLINACAO_EIXO_URANO, 1.392111369*VEL_ROTACAO_PADRAO, 0.0119125273*VEL_ORBITAL_PADRAO, 0.0f, 0.0f, 0);
-Astro neptune(30.07*DISTANCIA_PADRAO+COMPENSACAO, 3.88*RAIO_PADRAO, INCLINACAO_EIXO_NETUNO, 1.489757914*VEL_ROTACAO_PADRAO, 0.0060669734*VEL_ORBITAL_PADRAO, 0.0f, 0.0f, 0);
-Astro moon(0.00257*DISTANCIA_PADRAO, 0.2721072437*RAIO_PADRAO, 0.0f, 0.0f, 13.36873382*VEL_ROTACAO_PADRAO, 0.0f, 0.0f, 0);
+Astro mercury(0.39*DISTANCIA_PADRAO+COMPENSACAO, 0.38*RAIO_PADRAO, 0.01f, 0.01705146131*VEL_ROTACAO_PADRAO, 4.1505681818*VEL_ORBITAL_PADRAO, 0.0f, 0.0f, 0);
+Astro venus(0.72 * DISTANCIA_PADRAO + COMPENSACAO, 0.95 * RAIO_PADRAO, 177.3f, 0.004115056994*VEL_ROTACAO_PADRAO, 1.6233333333*VEL_ORBITAL_PADRAO, 0.0f, 0.0f, 0);
+Astro earth(DISTANCIA_PADRAO + COMPENSACAO, RAIO_PADRAO, 23.26f, VEL_ROTACAO_PADRAO, VEL_ORBITAL_PADRAO, 0.0f, 0.0f, 0);
+Astro mars(1.52*DISTANCIA_PADRAO+COMPENSACAO, 0.53*RAIO_PADRAO, 25.19f, 0.9747072494*VEL_ROTACAO_PADRAO, 0.5316593886*VEL_ORBITAL_PADRAO, 0.0f, 0.0f, 0);
+Astro jupiter(5.2*DISTANCIA_PADRAO+COMPENSACAO, 11.21*RAIO_PADRAO, 3.13f, 2.4182037*VEL_ROTACAO_PADRAO, 0.0843144044*VEL_ORBITAL_PADRAO, 0.0f, 0.0f, 0);
+Astro saturn(9.58*DISTANCIA_PADRAO+COMPENSACAO, 9.45*RAIO_PADRAO, 26.73f, 2.345340536*VEL_ROTACAO_PADRAO, 0.0339483223*VEL_ORBITAL_PADRAO, 0.0f, 0.0f, 0);
+Astro uranus(19.18*DISTANCIA_PADRAO+COMPENSACAO, 4.01*RAIO_PADRAO, 97.77f, 1.392111369*VEL_ROTACAO_PADRAO, 0.0119125273*VEL_ORBITAL_PADRAO, 0.0f, 0.0f, 0);
+Astro neptune(30.07*DISTANCIA_PADRAO+COMPENSACAO, 3.88*RAIO_PADRAO, 28.32f, 1.489757914*VEL_ROTACAO_PADRAO, 0.0060669734*VEL_ORBITAL_PADRAO, 0.0f, 0.0f, 0);
+Astro moon(0.00257*DISTANCIA_PADRAO, 0.2721072437*RAIO_PADRAO, 0.0f, 0.0f, 13.36873382*VEL_ORBITAL_PADRAO, 0.0f, 0.0f, 0);
 
 GLuint backgroundTexture;
 GLuint saturnRingTexture;
 
-Camera camera(2.97471f, 46.4001f, 38.8908f, 0.0f, 0.0f, -1.0f, 0.58, -0.8, 0.2f, 0.02f);
+Camera camera(2.97471f, 46.4001f, 38.8908f, 0.0f, 0.0f, -1.0f, 0.58, -0.8, 0.1f, 0.02f);
 
 // Variável para pausar o movimento de translação
 bool translacao = true;
 bool rotacao = true;
 bool desenhaOrbita = false;
+int cameraLocked = 0;
+
+Astro* target;
+float espacamentoAngular = 88.3;
 
 // Variáveis para controlar as teclas de movimento
 bool moveUp = false;
@@ -104,6 +100,20 @@ void init() {
     loadTextures();  // Carregar as texturas
 }
 
+void follow() {
+    // Calcula a posição do planeta que está sendo seguido
+    //graus para radianos (*0.0174533)
+    //k graus de espaçamento do planeta
+
+    camera.set_posZ(target->get_distancia() * cos((target->get_anguloTranslacao()+espacamentoAngular)*0.0174533));
+    camera.set_posX(target->get_distancia() * sin((target->get_anguloTranslacao()+espacamentoAngular)*0.0174533));
+    camera.set_posY(0.0);
+
+    // Compensa a rotação de translação na angulação da camera
+    camera.set_angleH(-target->get_anguloTranslacao()*0.0174533-0.1);
+    camera.set_angleV(0.0);
+}
+
 // Função para desenhar a órbita de um planeta
 void drawOrbit(float distance) {
     glDisable(GL_LIGHTING);  // Desabilitar iluminação para desenhar a órbita
@@ -143,7 +153,7 @@ void drawBackground() {
     glPopMatrix(); // Restaurar o estado da matriz anterior
 }
 
-void drawRing(float distance, float size, float translationAngle, GLuint texture, float axialTilt, float rotationAngle){
+void drawSaturnRing(){
     glPushMatrix();
     
     // Aplicar a textura ao anel
@@ -155,19 +165,16 @@ void drawRing(float distance, float size, float translationAngle, GLuint texture
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // Posicionar o anel no centro de Saturno
-    glRotatef(translationAngle, 0.0f, 1.0f, 0.0f); // Rotação do planeta em torno do sol (translação)
-    glTranslatef(distance, 0.0f, 0.0f); // Posição do planeta em relação ao Sol
-    glRotatef(-translationAngle, 0.0f, 1.0f, 0.0f);
+    glRotatef(saturn.get_anguloTranslacao(), 0.0f, 1.0f, 0.0f); // Rotação do planeta em torno do sol (translação)
+    glTranslatef(saturn.get_distancia(), 0.0f, 0.0f); // Posição do planeta em relação ao Sol
+    glRotatef(-saturn.get_anguloTranslacao(), 0.0f, 1.0f, 0.0f);
     
     // Inclinar o anel de acordo com a inclinação de Saturno
-    glRotatef(axialTilt, 1.0f, 0.0f, 0.0f); // Inclinação de 23.26 graus no eixo X
-
-    // Rotação em torno do próprio eixo
-    glRotatef(rotationAngle, 0.0f, 1.0f, 0.0f);
+    glRotatef(saturn.get_inclinacaoEixo(), 1.0f, 0.0f, 0.0f); // Inclinação no eixo X
     
     int segments = 300;
-    float raioInt = 1.1161478728*size;
-    float raioExt = 2.327404261*size;
+    float raioInt = 1.1161478728*saturn.get_raio();
+    float raioExt = 2.327404261*saturn.get_raio();
 
     glBegin(GL_QUAD_STRIP);
     
@@ -192,6 +199,38 @@ void drawRing(float distance, float size, float translationAngle, GLuint texture
     // Desativar blend e textura
     glDisable(GL_BLEND);
     glDisable(GL_TEXTURE_2D);
+    glPopMatrix();
+}
+
+void drawMoon(){
+    glPushMatrix();
+
+    glRotatef(earth.get_anguloTranslacao(), 0.0f, 1.0f, 0.0f);  // Rotação de translação da Terra ao redor do Sol
+    glTranslatef(earth.get_distancia(), 0.0f, 0.0f);       // Translação da Terra para sua órbita
+    glRotatef(-earth.get_anguloTranslacao(), 0.0f, 1.0f, 0.0f); // Compensação da Rotação de translação da Terra
+    glRotatef(moon.get_anguloTranslacao(), 0.0f, 1.0f, 0.0f);   // Rotação de translação da lua ao redor da terra
+
+    float anguloOrbitalZ = 5.2*sin(moon.get_anguloTranslacao()*(M_PI/180));
+    glRotatef(anguloOrbitalZ, 0.0f, 0.0f, 1.0f);   // Rotação de translação da lua pela terra
+    glTranslatef((moon.get_raio()+earth.get_raio()+moon.get_distancia())*DISTANCIA_PADRAO, 0.0f, 0.0f);        // Posiciona a lua na órbita da terra
+    
+    glRotatef(-90.0f, 1.0f, 0.0f, 0.0f);                      // ângulo de correção de textura
+    
+    if (moon.get_textura()) {
+        glEnable(GL_TEXTURE_2D);
+        glBindTexture(GL_TEXTURE_2D, moon.get_textura()); // Associar a textura
+        glColor3f(1.0f, 1.0f, 1.0f);                        // Branco para permitir a visualização da textura
+    } else {
+        glColor3f(1.0f, 0.0f, 0.0f);
+        glDisable(GL_TEXTURE_2D);                           // Desabilitar texturas se não houver
+    }
+    
+    // Desenhar a esfera com textura
+    GLUquadric* quadric = gluNewQuadric();
+    gluQuadricTexture(quadric, GL_TRUE);
+    gluSphere(quadric, moon.get_raio(), 50, 50);
+    gluDeleteQuadric(quadric);
+
     glPopMatrix();
 }
 
@@ -275,7 +314,8 @@ void display() {
     drawPlanet(neptune);
 
     //desenha anel de saturno
-    drawRing(9.58*DISTANCIA_PADRAO+COMPENSACAO, 9.45*RAIO_PADRAO, saturn.get_anguloTranslacao(), saturnRingTexture, INCLINACAO_EIXO_SATURNO, 0.0f);
+    drawSaturnRing();
+    drawMoon();
 
     glutSwapBuffers(); // Trocar os buffers para exibir a cena renderizada
 }
@@ -309,18 +349,19 @@ void update(int value) {
         neptune.update_anguloRotacao(); // Atualiza o ângulo de rotação de Netuno
     }
 
-    // Atualiza a posição da câmera com base na direção de visualização
-    if (moveFoward) camera.moveForward();       // Se a tecla de mover para frente estiver pressionada
-    if (moveBackward) camera.moveBackward();    // Se a tecla de mover para trás estiver pressionada
-    if (moveLeft) camera.moveLeft();            // Se a tecla de mover para a esquerda estiver pressionada
-    if (moveRight) camera.moveRight();          // Se a tecla de mover para a direita estiver pressionada
-    if (moveUp) camera.moveUp();              // Mover a câmera para cima
-    if (moveDown) camera.moveDown();          // Mover a câmera para baixo
-    
+    if (cameraLocked) follow();
+    else{                                       // Atualiza a posição da câmera com base na direção de visualização
+        if (moveFoward) camera.moveForward();       // Se a tecla de mover para frente estiver pressionada
+        if (moveBackward) camera.moveBackward();    // Se a tecla de mover para trás estiver pressionada
+        if (moveLeft) camera.moveLeft();            // Se a tecla de mover para a esquerda estiver pressionada
+        if (moveRight) camera.moveRight();          // Se a tecla de mover para a direita estiver pressionada
+        if (moveUp) camera.moveUp();              // Mover a câmera para cima
+        if (moveDown) camera.moveDown();          // Mover a câmera para baixo
+    }
     // Atualiza a direção da câmera com base nos ângulos de visão
     camera.updateLookDirection();
-    glutPostRedisplay(); // Solicitar uma nova exibição
-    glutTimerFunc(16, update, 0); // Chamar a função de atualização novamente após 16 ms
+    glutPostRedisplay();            // Solicitar uma nova exibição
+    glutTimerFunc(16, update, 0);   // Chamar a função de atualização novamente após 16 ms
 }
 
 // Função para capturar o movimento do mouse
@@ -391,8 +432,46 @@ void movementKeys(unsigned char key, int x, int y) {
 void handleKeys(unsigned char key, int x, int y){
     movementKeys(key, x, y); // Chama a função para lidar com as teclas de movimento
 
+    if ('1' <= key && '8' >= key){
+        int num = key-'0';
+        if(cameraLocked == num) cameraLocked = 0;
+        else cameraLocked = num;
+    }
+
     // Verifica quais teclas adicionais foram pressionadas para ações específicas
     switch (key) {
+        case '1':
+            target = &mercury;
+            espacamentoAngular = 88.3;
+            break;
+        case '2':
+            target = &venus;
+            espacamentoAngular = 88.3;
+            break;
+        case '3':
+            target = &earth;
+            espacamentoAngular = 88.3;
+            break;
+        case '4':
+            target = &mars;
+            espacamentoAngular = 88.3;
+            break;
+        case '5':
+            target = &jupiter;
+            espacamentoAngular = 82.6;
+            break;
+        case '6':
+            target = &saturn;
+            espacamentoAngular = 82.6;
+            break;
+        case '7':
+            target = &uranus;
+            espacamentoAngular = 87.4;
+            break;
+        case '8':
+            target = &neptune;
+            espacamentoAngular = 87.8;
+            break;
         case 'p':  // Pausar/retomar o movimento com a tecla P
             translacao = !translacao; // Alterna o estado da translação (pausar ou retomar)
             break;
