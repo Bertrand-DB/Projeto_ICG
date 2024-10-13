@@ -14,9 +14,6 @@ extern bool showControlersInfo;
 // Função para renderizar texto bitmap
 void renderBitmapString(float x, float y, void *font, const char *string);
 
-// Função para renderizar o pop-up com controles
-void renderPopUp();
-
 // Função de renderização do menu
 void renderMenu();
 

@@ -35,6 +35,7 @@ Astro moon(0.00257*DISTANCIA_PADRAO, 0.2721072437*RAIO_PADRAO, 0.0f, 0.0f, 13.36
 
 GLuint backgroundTexture;
 GLuint saturnRingTexture;
+GLuint controle_menu_tex, mercury_info_tex, venus_info_tex, earth_info_tex, mars_info_tex, jupiter_info_tex, saturn_info_tex, uranus_info_tex, neptune_info_tex;
 
 Camera camera(2.97471f, 46.4001f, 38.8908f, 0.0f, 0.0f, -1.0f, 0.58, -0.8, 0.1f, 0.02f);
 
@@ -42,9 +43,11 @@ Camera camera(2.97471f, 46.4001f, 38.8908f, 0.0f, 0.0f, -1.0f, 0.58, -0.8, 0.1f,
 bool translacao = true;
 bool rotacao = true;
 bool desenhaOrbita = false;
+bool showInfo = true;
 int cameraLocked = 0;
 
 Astro* target;
+GLuint& target_info_tex = controle_menu_tex;
 float espacamentoAngular = 88.3;
 
 // Variáveis para controlar as teclas de movimento
@@ -72,6 +75,16 @@ void loadTextures() {
     neptune.set_textura(loadTexture("assets/neptune.jpg"));
     backgroundTexture = loadTexture("assets/background.jpg");
     moon.set_textura(loadTexture("assets/moon.jpg"));
+    
+    mercury_info_tex = loadTexture("assets/mercury_info.png");
+    venus_info_tex = loadTexture("assets/venus_info.png");
+    earth_info_tex = loadTexture("assets/earth_info.png");
+    mars_info_tex = loadTexture("assets/mars_info.png");
+    jupiter_info_tex = loadTexture("assets/jupiter_info.png");
+    saturn_info_tex = loadTexture("assets/saturn_info.png");
+    uranus_info_tex = loadTexture("assets/uranus_info.png");
+    neptune_info_tex = loadTexture("assets/neptune_info.png");
+    controle_menu_tex = loadTexture("assets/controle_menu_info.png");
 
     // Configura as texturas para cada astro
     configurarTextura(sun.get_textura());
@@ -86,6 +99,16 @@ void loadTextures() {
     configurarTextura(neptune.get_textura());
     configurarTextura(backgroundTexture);
     configurarTextura(moon.get_textura());
+
+    configurarTextura(mercury_info_tex);
+    configurarTextura(venus_info_tex);
+    configurarTextura(earth_info_tex);
+    configurarTextura(mars_info_tex);
+    configurarTextura(jupiter_info_tex);
+    configurarTextura(saturn_info_tex);
+    configurarTextura(uranus_info_tex);
+    configurarTextura(neptune_info_tex);
+    configurarTextura(controle_menu_tex);
 }
 
 // Função para inicializar as configurações OpenGL
@@ -98,6 +121,53 @@ void init() {
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Define a cor de fundo da janela
 
     loadTextures();  // Carregar as texturas
+}
+
+void renderInfo(GLuint textureId, float x, float y, float width, float height) {
+    // Salvar a matriz de projeção e a matriz de visualização atuais
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+
+    // Configurar uma projeção ortográfica (sem perspectiva)
+    int screenWidth = glutGet(GLUT_WINDOW_WIDTH);  // Defina a largura da sua tela
+    int screenHeight = glutGet(GLUT_WINDOW_HEIGHT); // Defina a altura da sua tela
+    glOrtho(0, screenWidth, 0, screenHeight, -1, 1);
+
+    // Trocar para a matriz de modelo
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+
+    // Habilitar o uso de texturas 2D
+    glEnable(GL_TEXTURE_2D);
+    glDisable(GL_LIGHTING);
+
+    // Ativar o blending para lidar com transparência (PNG, por exemplo)
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    // Associar a textura
+    glBindTexture(GL_TEXTURE_2D, textureId);
+
+    // Renderizar o quad com a textura aplicada
+    glBegin(GL_QUADS);
+    glTexCoord2f(0.0f, 0.0f); glVertex2f(x, y);                   // Canto inferior esquerdo
+    glTexCoord2f(1.0f, 0.0f); glVertex2f(x + width, y);           // Canto inferior direito
+    glTexCoord2f(1.0f, 1.0f); glVertex2f(x + width, y + height);  // Canto superior direito
+    glTexCoord2f(0.0f, 1.0f); glVertex2f(x, y + height);          // Canto superior esquerdo
+    glEnd();
+
+    // Desabilitar texturas e blending
+    glEnable(GL_LIGHTING);
+    glDisable(GL_TEXTURE_2D);
+    glDisable(GL_BLEND);
+
+    // Restaurar a matriz de visualização e projeção anteriores
+    glPopMatrix();
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);  // Voltar para o modo de modelo
 }
 
 void follow() {
@@ -276,7 +346,7 @@ void display() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     if (showControlersInfo == true) {
-        renderPopUp();
+        renderInfo(controle_menu_tex, 500, 300, 760, 517);
     } else {
         renderMenu();
     }
@@ -316,6 +386,10 @@ void display() {
     //desenha anel de saturno
     drawSaturnRing();
     drawMoon();
+
+    if(cameraLocked && showInfo){
+        renderInfo(target_info_tex, 100, 160, 650, 700);
+    }
 
     glutSwapBuffers(); // Trocar os buffers para exibir a cena renderizada
 }
@@ -442,34 +516,42 @@ void handleKeys(unsigned char key, int x, int y){
     switch (key) {
         case '1':
             target = &mercury;
+            target_info_tex = mercury_info_tex;
             espacamentoAngular = 88.3;
             break;
         case '2':
             target = &venus;
+            target_info_tex = venus_info_tex;
             espacamentoAngular = 88.3;
             break;
         case '3':
             target = &earth;
+            target_info_tex = earth_info_tex;
             espacamentoAngular = 88.3;
             break;
         case '4':
             target = &mars;
+            target_info_tex = mars_info_tex;
             espacamentoAngular = 88.3;
             break;
         case '5':
             target = &jupiter;
+            target_info_tex = jupiter_info_tex;
             espacamentoAngular = 82.6;
             break;
         case '6':
             target = &saturn;
+            target_info_tex = saturn_info_tex;
             espacamentoAngular = 82.6;
             break;
         case '7':
             target = &uranus;
+            target_info_tex = uranus_info_tex;
             espacamentoAngular = 87.4;
             break;
         case '8':
             target = &neptune;
+            target_info_tex = neptune_info_tex;
             espacamentoAngular = 87.8;
             break;
         case 'p':  // Pausar/retomar o movimento com a tecla P
@@ -477,6 +559,9 @@ void handleKeys(unsigned char key, int x, int y){
             break;
         case 'P':
             rotacao = !rotacao;
+            break;
+        case 'i':
+            showInfo = !showInfo;
             break;
         case 'r':   // Reposiciona a câmera na posição inicial
             camera.set_posX(2.97471); // Define a posição inicial da câmera no eixo X
@@ -488,8 +573,8 @@ void handleKeys(unsigned char key, int x, int y){
         case 'l': // Alternar a visualização da órbita
             desenhaOrbita = !desenhaOrbita; // Alterna o estado da visualização da órbita
             break;
-        case 27:   // Tecla ESC para sair
-            exit(0); // Encerra o programa
+        case 27:
+            showControlersInfo = false;
             break;
         case 13: // Enter
             if (selectedItem == 0) {
