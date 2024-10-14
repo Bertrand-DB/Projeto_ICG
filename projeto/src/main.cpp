@@ -1,4 +1,4 @@
-//Comando de compilação: g++ src/main.cpp src/menu.cpp src/astro.cpp src/camera.cpp src/textura.cpp -o sis -lGL -lGLU -lSOIL -lGLEW -lglut -lm
+//Comando de compilação: g++ src/main.cpp src/menu.cpp src/astro.cpp src/camera.cpp src/textura.cpp -o sis -lGL -lGLU -lSOIL -lglut -lm
 #include <cmath>
 #include <cstdio>
 #include <iostream>
