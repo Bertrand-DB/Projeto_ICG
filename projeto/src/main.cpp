@@ -132,6 +132,11 @@ void renderInfo(GLuint* textureId, float x, float y, float width, float height) 
     // Configurar uma projeção ortográfica (sem perspectiva)
     int screenWidth = glutGet(GLUT_WINDOW_WIDTH);  // Defina a largura da sua tela
     int screenHeight = glutGet(GLUT_WINDOW_HEIGHT); // Defina a altura da sua tela
+    x = x*screenWidth;
+    y = y*screenHeight;
+    width = width*screenWidth;
+    height = height*screenHeight;
+
     glOrtho(0, screenWidth, 0, screenHeight, -1, 1);
 
     // Trocar para a matriz de modelo
@@ -346,7 +351,7 @@ void display() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     if (showControlersInfo == true && !cameraLocked) {
-        renderInfo(&controle_menu_tex, 500, 300, 760, 517);
+        renderInfo(&controle_menu_tex, 0.3, 0.25, 0.4, 0.5);
     } else {
         renderMenu();
     }
@@ -388,7 +393,7 @@ void display() {
     drawMoon();
 
     if(cameraLocked && showInfo && !showControlersInfo){
-        renderInfo(target_info_tex, 100, 160, 650, 700);
+        renderInfo(target_info_tex, 0.075, 0.2, 0.3, 0.6);
     }
 
     glutSwapBuffers(); // Trocar os buffers para exibir a cena renderizada
