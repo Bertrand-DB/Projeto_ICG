@@ -4,7 +4,9 @@
 #include <iostream>
 #include <GL/glut.h>
 #include <SOIL/SOIL.h>
+#include <vector>
 
+#include "asteroide.cpp"
 #include "../include/menu.h"
 #include "../include/astro.h"
 #include "../include/camera.h"
@@ -32,6 +34,8 @@ Astro saturn(9.58*DISTANCIA_PADRAO+COMPENSACAO, 9.45*RAIO_PADRAO, 26.73f, 2.3453
 Astro uranus(19.18*DISTANCIA_PADRAO+COMPENSACAO, 4.01*RAIO_PADRAO, 97.77f, 1.392111369*VEL_ROTACAO_PADRAO, 0.0119125273*VEL_ORBITAL_PADRAO, 0.0f, 0.0f, 0);
 Astro neptune(30.07*DISTANCIA_PADRAO+COMPENSACAO, 3.88*RAIO_PADRAO, 28.32f, 1.489757914*VEL_ROTACAO_PADRAO, 0.0060669734*VEL_ORBITAL_PADRAO, 0.0f, 0.0f, 0);
 Astro moon(0.00257*DISTANCIA_PADRAO, 0.2721072437*RAIO_PADRAO, 0.0f, 0.0f, 13.36873382*VEL_ORBITAL_PADRAO, 0.0f, 0.0f, 0);
+
+Asteroide aster(5, 60, 60, mars.get_distancia());
 
 GLuint backgroundTexture;
 GLuint saturnRingTexture;
@@ -75,6 +79,7 @@ void loadTextures() {
     neptune.set_textura(loadTexture("assets/neptune.jpg"));
     backgroundTexture = loadTexture("assets/background.jpg");
     moon.set_textura(loadTexture("assets/moon.jpg"));
+    aster.set_textura(loadTexture("assets/moon.jpg"));
     
     mercury_info_tex = loadTexture("assets/mercury_info.png");
     venus_info_tex = loadTexture("assets/venus_info.png");
@@ -99,6 +104,7 @@ void loadTextures() {
     configurarTextura(neptune.get_textura());
     configurarTextura(backgroundTexture);
     configurarTextura(moon.get_textura());
+    configurarTextura(aster.get_textura());
 
     configurarTextura(mercury_info_tex);
     configurarTextura(venus_info_tex);
@@ -110,6 +116,14 @@ void loadTextures() {
     configurarTextura(neptune_info_tex);
     configurarTextura(controle_menu_tex);
 }
+
+// Função auxiliar para gerar uma perturbação suave
+float smoothPerturbation(float lat, float lon, float magnitude) {
+    float rand_fat = rand()%10;
+    float scale = 0.3f; // Escala para o valor de suavização
+    return 1.0f + magnitude * scale * sin(lat * rand_fat) * cos(lon * rand_fat);
+}
+
 
 // Função para inicializar as configurações OpenGL
 void init() {
@@ -366,7 +380,7 @@ void display() {
     // Definir a posição da luz
     GLfloat lightPos[] = {0.0f, 0.0f, 0.0f, 1.0f}; // Posição da luz (no centro do sistema solar)
     glLightfv(GL_LIGHT0, GL_POSITION, lightPos); // Aplicar a posição da luz
-
+    
     // Configurar a emissão de luz do Sol para brilhar amarelo
     GLfloat emission[] = { 1.0f, 1.0f, 0.0f, 1.0f }; // Cor da emissão (amarelo)
     glMaterialfv(GL_FRONT, GL_EMISSION, emission); // Aplicar a emissão ao material do Sol
@@ -391,6 +405,8 @@ void display() {
     //desenha anel de saturno
     drawSaturnRing();
     drawMoon();
+    
+    aster.draw();
 
     if(cameraLocked && showInfo && !showControlersInfo){
         renderInfo(target_info_tex, 0.075, 0.2, 0.3, 0.6);
