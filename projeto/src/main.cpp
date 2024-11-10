@@ -35,7 +35,9 @@ Astro uranus(19.18*DISTANCIA_PADRAO+COMPENSACAO, 4.01*RAIO_PADRAO, 97.77f, 1.392
 Astro neptune(30.07*DISTANCIA_PADRAO+COMPENSACAO, 3.88*RAIO_PADRAO, 28.32f, 1.489757914*VEL_ROTACAO_PADRAO, 0.0060669734*VEL_ORBITAL_PADRAO, 0.0f, 0.0f, 0);
 Astro moon(0.00257*DISTANCIA_PADRAO, 0.2721072437*RAIO_PADRAO, 0.0f, 0.0f, 13.36873382*VEL_ORBITAL_PADRAO, 0.0f, 0.0f, 0);
 
-Asteroide aster(5, 60, 60, mars.get_distancia());
+Asteroide aster(3, mars.get_distancia());
+Asteroide aster2(5, mars.get_distancia()+16);
+Asteroide aster3(8, mars.get_distancia()+40);
 
 GLuint backgroundTexture;
 GLuint saturnRingTexture;
@@ -79,7 +81,9 @@ void loadTextures() {
     neptune.set_textura(loadTexture("assets/neptune.jpg"));
     backgroundTexture = loadTexture("assets/background.jpg");
     moon.set_textura(loadTexture("assets/moon.jpg"));
-    aster.set_textura(loadTexture("assets/moon.jpg"));
+    aster.set_textura("assets/moon.jpg");
+    aster2.set_textura("assets/moon.jpg");
+    aster3.set_textura("assets/moon.jpg");
     
     mercury_info_tex = loadTexture("assets/mercury_info.png");
     venus_info_tex = loadTexture("assets/venus_info.png");
@@ -104,7 +108,6 @@ void loadTextures() {
     configurarTextura(neptune.get_textura());
     configurarTextura(backgroundTexture);
     configurarTextura(moon.get_textura());
-    configurarTextura(aster.get_textura());
 
     configurarTextura(mercury_info_tex);
     configurarTextura(venus_info_tex);
@@ -407,6 +410,8 @@ void display() {
     drawMoon();
     
     aster.draw();
+    aster2.draw();
+    aster3.draw();
 
     if(cameraLocked && showInfo && !showControlersInfo){
         renderInfo(target_info_tex, 0.075, 0.2, 0.3, 0.6);
